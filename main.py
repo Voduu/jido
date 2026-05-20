@@ -48,7 +48,7 @@ while user_input != "exit":
         continue
 
     # If there are multiple readings, prompt the user to choose one.
-    selected_slug = 1
+    selected_slug = 0
     if slug_count > 1:
         for i in range(slug_count):
             print(f"{i + 1}. {user_input}\uff08{readings[i]}\uff09")
@@ -68,7 +68,7 @@ while user_input != "exit":
     selected_sense = 0
     if senses_count > 1:
         for i in range(senses_count):
-            print(f"{i + 1}. {"; ".join(data.senses[i].english_definitions)}")
+            print(f"{i + 1}. {"; ".join(data[selected_slug].senses[i].english_definitions)}")
         
         user_selection = 0
         while user_selection not in range(1, senses_count + 1):
@@ -81,9 +81,10 @@ while user_input != "exit":
         selected_sense = user_selection - 1
 
     # Finally, apply the slug, sense, and reading.
+    # NOTE: Probably need to handle this during the previous checks instead of waiting until the end.
     expr = data[selected_slug].slug
     expr_meaning = "; ".join(data[selected_slug].senses[selected_sense].english_definitions)
-    expr_reading = readings[selected_slug + 1]
+    expr_reading = readings[selected_slug]
 
     print(f"Expression: {expr}")
     print(f"Reading: {expr_reading}")
