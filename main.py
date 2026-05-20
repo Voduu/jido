@@ -1,4 +1,42 @@
 from jisho_api.word import Word
+import random
+import genanki
+
+def create_card(expr, expr_meaning, expr_reading):
+    model_id = random.randrange(1 << 30, 1 << 31)
+    deck_id = random.randrange(1 << 30, 1 << 31)
+    
+    anki_model = genanki.Model(
+        model_id,
+        "Japanese Model A",
+        fields=[
+            {"name": "Expression"},
+            {"name": "Meaning"},
+            {"name": "Reading"},
+        ],
+        templates=[
+            {
+                "name": "Card 1",
+                "qfmt": "{{Expression}}",
+                "afmt": "{{Expression}}<hr>{{Reading}}<hr>{{Meaning}}"
+            }
+        ]
+    )
+
+    anki_note = genanki.Note(
+        model = anki_model,
+        fields=[expr, expr_reading, expr_meaning]
+    )
+
+    anki_deck = genanki.Deck(
+        deck_id,
+        "Japanese Vocab"
+    )
+    anki_deck.add_note(anki_note)
+
+    genanki.Package(anki_deck).write_to_file("output.apkg")
+
+
 
 def main():
     expr = ""
@@ -91,6 +129,9 @@ def main():
         print(f"Expression: {expr}")
         print(f"Reading: {expr_reading}")
         print(f"Meaning: {expr_meaning}")
+
+        # Create card.
+        create_card (expr, expr_meaning, expr_reading)
 
 if __name__ == "__main__":
     main()
