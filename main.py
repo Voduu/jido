@@ -2,6 +2,7 @@ from jisho_api.word import Word
 import random
 import genanki
 
+
 def fetch_word(user_input):
     expr_data = ["", "", ""]
 
@@ -84,7 +85,6 @@ def fetch_word(user_input):
     return expr_data
 
 
-
 def create_card(expr, expr_meaning, expr_reading):
     model_id = random.randrange(1 << 30, 1 << 31)
     deck_id = random.randrange(1 << 30, 1 << 31)
@@ -120,7 +120,6 @@ def create_card(expr, expr_meaning, expr_reading):
     genanki.Package(anki_deck).write_to_file("output.apkg")
 
 
-
 def main():
     user_input = ""
 
@@ -137,6 +136,7 @@ def main():
 
         # Create card.
         create_card (expr_data[0], expr_data[1], expr_data[2])
+
 
 if __name__ == "__main__":
     main()
