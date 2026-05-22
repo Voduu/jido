@@ -122,10 +122,6 @@ def create_card(expr, expr_meaning, expr_reading):
 
 
 def main():
-    expr = ""
-    expr_meaning = ""
-    expr_reading = ""
-
     user_input = ""
 
     while user_input != "exit":
