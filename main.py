@@ -2,6 +2,89 @@ from jisho_api.word import Word
 import random
 import genanki
 
+def fetch_word(user_input):
+    expr_data = ["", "", ""]
+
+    # Retrieve data from Jisho API.
+    data = Word.request(user_input).data
+    print(data)
+
+    if len(data) == 0:
+        print(f"No match found for {user_input}.")
+        return None
+    
+    # Search for at least one single matching slug.
+    match_found = False
+    slug_count = 0
+    readings = []
+    for i in range(len(data)):
+        parsed_slug = "".join(c for c in data[i].slug if c not in "-0123456789")
+
+        # Keep track of the number of matches and skip mismatches.
+        if parsed_slug == user_input:
+            slug_count += 1
+            match_found = True
+        else: continue
+        
+        # Handle any number of readings.
+        # NOTE: Will have to later come back and handle kana-only words,
+        # where the word=None as it has no kanji.
+        slug_readings = []
+        for j in range(len(data[i].japanese)):
+            if data[i].japanese[j].word == user_input:
+                slug_readings.append(data[i].japanese[j].reading)
+        readings.append("\uff0f".join(slug_readings))
+
+    # Exit if no matches found.
+    if match_found == False:
+        print(f"No match found for {user_input}.")
+        return None
+    
+    # If there are multiple readings, prompt the user to choose one.
+    selected_slug = 0
+    if slug_count > 1:
+        for i in range(slug_count):
+            print(f"{i + 1}. {user_input}\uff08{readings[i]}\uff09")
+        
+        user_selection = 0
+        while user_selection not in range(1, slug_count + 1):
+            user_selection = input(f"Multiple readings were found for {user_input}. Please choose the number of the correct reading (i.e., 1): ")
+            try:
+                user_selection = int(user_selection)
+            except ValueError:
+                continue
+        
+        selected_slug = user_selection - 1
+    
+    # If there are multiple senses, prompt the user to choose one.
+    senses_count = len(data[selected_slug].senses)
+    selected_sense = 0
+    if senses_count > 1:
+        for i in range(senses_count):
+            print(f"{i + 1}. {"; ".join(data[selected_slug].senses[i].english_definitions)}")
+        
+        user_selection = 0
+        while user_selection not in range(1, senses_count + 1):
+            user_selection = input(f"Multiple senses were found for {user_input}. Please choose the number of the correct sense (i.e., 1): ")
+            try:
+                user_selection = int(user_selection)
+            except ValueError:
+                continue
+        
+        selected_sense = user_selection - 1
+    
+    # Finally, apply the slug, sense, and reading.
+    # NOTE: Probaly need to handle this during the previous checks instead of waiting until the end.
+    expr_data = [
+        data[selected_slug].slug,
+        "; ".join(data[selected_slug].senses[selected_sense].english_definitions),
+        readings[selected_slug]
+    ]
+
+    return expr_data
+
+
+
 def create_card(expr, expr_meaning, expr_reading):
     model_id = random.randrange(1 << 30, 1 << 31)
     deck_id = random.randrange(1 << 30, 1 << 31)
@@ -51,87 +134,13 @@ def main():
         if user_input == "exit":
             break
         
-        # Retrieve data from Jisho API.
-        data = Word.request(user_input).data
-        print(data)
-
-        if len(data) == 0:
-            print(f"No match found for {user_input}.")
+        # Retreive Jisho data.
+        expr_data = fetch_word(user_input)
+        if expr_data is None:
             continue
-        
-        # Search for at least a single matching slug.
-        match_found = False
-        slug_count = 0
-        readings = []
-        for i in range(len(data)):
-            parsed_slug = "".join(c for c in data[i].slug if c not in "-0123456789")
-
-            # Keep track of the number of matches and skip mismatches.
-            if parsed_slug == user_input:
-                slug_count += 1
-                match_found = True
-            else: continue
-
-            # Handle any number of readings.
-            # NOTE: Will have to later come back and handle kana-only words, 
-            # where the word=None as it has no kanji.
-            slug_readings = []
-            for j in range(len(data[i].japanese)):
-                if data[i].japanese[j].word == user_input:
-                    slug_readings.append(data[i].japanese[j].reading)
-            readings.append("\uff0f".join(slug_readings))
-
-        # Exit if no matches found.
-        if match_found == False:
-            print(f"No match found for {user_input}.")
-            continue
-
-        # If there are multiple readings, prompt the user to choose one.
-        selected_slug = 0
-        if slug_count > 1:
-            for i in range(slug_count):
-                print(f"{i + 1}. {user_input}\uff08{readings[i]}\uff09")
-            
-            user_selection = 0
-            while user_selection not in range(1, slug_count + 1):
-                user_selection = input(f"Muliple readings were found for {user_input}. Please choose the correct reading: ")
-                try:
-                    user_selection = int(user_selection)
-                except ValueError:
-                    continue
-                
-            selected_slug = user_selection - 1
-
-        # If there are multiple senses, prompt the user to choose one.
-        senses_count = len(data[selected_slug].senses)
-        selected_sense = 0
-        if senses_count > 1:
-            for i in range(senses_count):
-                print(f"{i + 1}. {"; ".join(data[selected_slug].senses[i].english_definitions)}")
-            
-            user_selection = 0
-            while user_selection not in range(1, senses_count + 1):
-                user_selection = input(f"Multiple senses were found for {user_input}. Please choose the correct sense: ")
-                try:
-                    user_selection = int(user_selection)
-                except ValueError:
-                    continue
-            
-            selected_sense = user_selection - 1
-
-        # Finally, apply the slug, sense, and reading.
-        # NOTE: Probably need to handle this during the previous checks instead of waiting until the end.
-        expr = data[selected_slug].slug
-        expr_meaning = "; ".join(data[selected_slug].senses[selected_sense].english_definitions)
-        expr_reading = readings[selected_slug]
-
-        # NOTE: remove debug messages.
-        print(f"Expression: {expr}")
-        print(f"Reading: {expr_reading}")
-        print(f"Meaning: {expr_meaning}")
 
         # Create card.
-        create_card (expr, expr_meaning, expr_reading)
+        create_card (expr_data[0], expr_data[1], expr_data[2])
 
 if __name__ == "__main__":
     main()
