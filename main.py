@@ -2,7 +2,7 @@ from jisho_api.word import Word
 import random
 import genanki
 
-class Deck:
+class JidoSession:
     def __init__(self, deck_name):
         model_id = random.randrange(1 << 30, 1 << 31)
         deck_id = random.randrange(1 << 30, 1 << 31)
@@ -41,7 +41,7 @@ def fetch_word(user_input):
         data = Word.request(user_input).data
     except AttributeError:
         return None
-    print(data)
+    # print(data)
 
     if len(data) == 0:
         print(f"No match found for {user_input}.")
@@ -126,11 +126,9 @@ def create_card(expr_data, jido_deck):
 
     jido_deck.add_note(anki_note)
 
-    # genanki.Package(anki_deck).write_to_file("output.apkg")
-    print("Success!...Maybe.")
 
-
-def export_deck(output_name, jido_deck)
+def export_deck(output_name, jido_deck):
+    genanki.Package(jido_deck.anki_deck).write_to_file(output_name + ".apkg")
 
 
 def main():
@@ -142,7 +140,7 @@ def main():
     while deck_name == "":
         deck_name = input("Enter your deck name: ")
     
-    jido_deck = Deck(deck_name)
+    jido_session = JidoSession(deck_name)
 
     while valid_output_name is False:
         output_name = input("Enter your output name (excluding .apkg): ")
@@ -152,10 +150,14 @@ def main():
         if len(output_name) > 0:
             valid_output_name = True
 
-    while user_input != "exit":
-        user_input = input("Enter a word: ")
+    while user_input not in ["exit", "export"]:
+        user_input = input("Enter a word ('exit' to exit, 'export' to create .apkg package): ")
 
         if user_input == "exit":
+            break
+
+        if user_input == "export":
+            export_deck(output_name, jido_session)
             break
         
         # Retreive Jisho data.
@@ -164,7 +166,7 @@ def main():
             continue
 
         # Create card.
-        create_card(expr_data, jido_deck)
+        create_card(expr_data, jido_session)
 
 
 if __name__ == "__main__":
