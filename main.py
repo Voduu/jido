@@ -32,9 +32,6 @@ class Deck:
     def add_note(self, anki_note):
         self.anki_deck.add_note(anki_note)
 
-    def set_deck_name(self, deck_name):
-        self.anki_deck.name = deck_name
-
 
 def fetch_word(user_input):
     expr_data = ["", "", ""]
