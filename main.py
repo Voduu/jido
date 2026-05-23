@@ -128,10 +128,10 @@ def fetch_word(user_input):
     return expr_data
 
 
-def create_card(expr, expr_meaning, expr_reading, jido_deck):
+def create_card(expr_data, jido_deck):
     anki_note = genanki.Note(
         model = jido_deck.anki_model,
-        fields=[expr, expr_reading, expr_meaning]
+        fields=[expr_data[0], expr_data[1], expr_data[2]]
     )
 
     jido_deck.add_note(anki_note)
@@ -171,7 +171,7 @@ def main():
             continue
 
         # Create card.
-        create_card(expr_data[0], expr_data[1], expr_data[2], jido_deck)
+        create_card(expr_data, jido_deck)
 
 
 if __name__ == "__main__":
