@@ -2,6 +2,46 @@ from jisho_api.word import Word
 import random
 import genanki
 
+class Deck:
+    def __init__(self, deck_name):
+        model_id = random.randrange(1 << 30, 1 << 31)
+        deck_id = random.randrange(1 << 30, 1 << 31)
+
+        self.anki_model = genanki.Model(
+            model_id,
+            "Jido Model",
+            fields=[
+                {"name": "Expression"},
+                {"name": "Meaning"},
+                {"name": "Reading"},
+            ],
+            templates=[
+                {
+                    "name": "Card 1",
+                    "qfmt": "{{Expression}}",
+                    "afmt": "{{Expression}}<hr>{{Reading}}<hr>{{Meaning}}"
+                }
+            ]
+        )
+
+        self.anki_deck = genanki.Deck(
+            deck_id,
+            deck_name
+        )
+
+
+    def add_note(self, anki_note):
+        self.anki_deck.add_note(anki_note)
+
+
+    def set_deck_name(self, deck_name):
+        self.anki_deck.name = deck_name
+
+    
+    def get_anki_model(self):
+        return self.anki_model
+
+
 
 def fetch_word(user_input):
     expr_data = ["", "", ""]
@@ -88,43 +128,36 @@ def fetch_word(user_input):
     return expr_data
 
 
-def create_card(expr, expr_meaning, expr_reading):
-    model_id = random.randrange(1 << 30, 1 << 31)
-    deck_id = random.randrange(1 << 30, 1 << 31)
-    
-    anki_model = genanki.Model(
-        model_id,
-        "Japanese Model A",
-        fields=[
-            {"name": "Expression"},
-            {"name": "Meaning"},
-            {"name": "Reading"},
-        ],
-        templates=[
-            {
-                "name": "Card 1",
-                "qfmt": "{{Expression}}",
-                "afmt": "{{Expression}}<hr>{{Reading}}<hr>{{Meaning}}"
-            }
-        ]
-    )
-
+def create_card(expr, expr_meaning, expr_reading, jido_deck):
     anki_note = genanki.Note(
-        model = anki_model,
+        model = jido_deck.anki_model,
         fields=[expr, expr_reading, expr_meaning]
     )
 
-    anki_deck = genanki.Deck(
-        deck_id,
-        "Japanese Vocab"
-    )
-    anki_deck.add_note(anki_note)
+    jido_deck.add_note(anki_note)
 
-    genanki.Package(anki_deck).write_to_file("output.apkg")
+    # genanki.Package(anki_deck).write_to_file("output.apkg")
+    print("Success!...Maybe.")
 
 
 def main():
+    deck_name = ""
+    output_name = ""
+    valid_output_name = False
     user_input = ""
+
+    while deck_name == "":
+        deck_name = input("Enter your deck name: ")
+    
+    jido_deck = Deck(deck_name)
+
+    while valid_output_name is False:
+        output_name = input("Enter your output name (expluding .apkg): ")
+        output_name = output_name.strip(" .")
+        output_name = "".join(c for c in output_name if c not in '<>:"/\\|?*')
+
+        if len(output_name) > 0:
+            valid_output_name = True
 
     while user_input != "exit":
         user_input = input("Enter a word: ")
@@ -138,7 +171,7 @@ def main():
             continue
 
         # Create card.
-        create_card (expr_data[0], expr_data[1], expr_data[2])
+        create_card(expr_data[0], expr_data[1], expr_data[2], jido_deck)
 
 
 if __name__ == "__main__":
