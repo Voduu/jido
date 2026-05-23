@@ -29,18 +29,11 @@ class Deck:
             deck_name
         )
 
-
     def add_note(self, anki_note):
         self.anki_deck.add_note(anki_note)
 
-
     def set_deck_name(self, deck_name):
         self.anki_deck.name = deck_name
-
-    
-    def get_anki_model(self):
-        return self.anki_model
-
 
 
 def fetch_word(user_input):
