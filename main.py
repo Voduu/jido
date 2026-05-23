@@ -130,6 +130,9 @@ def create_card(expr_data, jido_deck):
     print("Success!...Maybe.")
 
 
+def export_deck(output_name, jido_deck)
+
+
 def main():
     deck_name = ""
     output_name = ""
@@ -142,7 +145,7 @@ def main():
     jido_deck = Deck(deck_name)
 
     while valid_output_name is False:
-        output_name = input("Enter your output name (expluding .apkg): ")
+        output_name = input("Enter your output name (excluding .apkg): ")
         output_name = output_name.strip(" .")
         output_name = "".join(c for c in output_name if c not in '<>:"/\\|?*')
 
