@@ -2,6 +2,7 @@ from jisho_api.word import Word
 import random
 import genanki
 
+
 class JidoSession:
     def __init__(self, deck_name):
         model_id = random.randrange(1 << 30, 1 << 31)
@@ -166,7 +167,7 @@ def main():
             export_deck(output_name, jido_session)
             break
         
-        # Retreive Jisho data.
+        # Retrieve Jisho data.
         expr_data = fetch_word(user_input)
         if expr_data is None:
             continue
