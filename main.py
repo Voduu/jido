@@ -7,7 +7,10 @@ def fetch_word(user_input):
     expr_data = ["", "", ""]
 
     # Retrieve data from Jisho API.
-    data = Word.request(user_input).data
+    try:
+        data = Word.request(user_input).data
+    except AttributeError:
+        return None
     print(data)
 
     if len(data) == 0:
