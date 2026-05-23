@@ -34,8 +34,6 @@ class JidoSession:
 
 
 def fetch_word(user_input):
-    expr_data = ["", "", ""]
-
     # Retrieve data from Jisho API.
     try:
         data = Word.request(user_input).data
@@ -70,7 +68,7 @@ def fetch_word(user_input):
         readings.append("\uff0f".join(slug_readings))
 
     # Exit if no matches found.
-    if match_found == False:
+    if not match_found:
         print(f"No match found for {user_input}.")
         return None
     
@@ -108,7 +106,6 @@ def fetch_word(user_input):
         selected_sense = user_selection - 1
     
     # Finally, apply the slug, sense, and reading.
-    # NOTE: Probaly need to handle this during the previous checks instead of waiting until the end.
     expr_data = [
         data[selected_slug].slug,
         "; ".join(data[selected_slug].senses[selected_sense].english_definitions),
@@ -150,7 +147,7 @@ def main():
         if len(output_name) > 0:
             valid_output_name = True
 
-    while user_input not in ["exit", "export"]:
+    while True:
         user_input = input("Enter a word ('exit' to exit, 'export' to create .apkg package): ")
 
         if user_input == "exit":
