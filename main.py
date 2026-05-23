@@ -50,13 +50,15 @@ def fetch_word(user_input):
     slug_count = 0
     readings = []
     for i in range(len(data)):
-        parsed_slug = "".join(c for c in data[i].slug if c not in "-0123456789")
+        parsed_slug = "".join(
+            c for c in data[i].slug if c not in "-0123456789")
 
         # Keep track of the number of matches and skip mismatches.
         if parsed_slug == user_input:
             slug_count += 1
             match_found = True
-        else: continue
+        else:
+            continue
         
         # Handle any number of readings.
         # NOTE: Will have to later come back and handle kana-only words,
@@ -80,7 +82,9 @@ def fetch_word(user_input):
         
         user_selection = 0
         while user_selection not in range(1, slug_count + 1):
-            user_selection = input(f"Multiple readings were found for {user_input}. Please choose the number of the correct reading (i.e., 1): ")
+            user_selection = input(
+                f"Multiple readings were found for {user_input}. Please " \
+                 "choose the number of the correct reading (i.e., 1): ")
             try:
                 user_selection = int(user_selection)
             except ValueError:
@@ -93,11 +97,14 @@ def fetch_word(user_input):
     selected_sense = 0
     if senses_count > 1:
         for i in range(senses_count):
-            print(f"{i + 1}. {"; ".join(data[selected_slug].senses[i].english_definitions)}")
+            print(f"{i + 1}. {"; ".join(
+                data[selected_slug].senses[i].english_definitions)}")
         
         user_selection = 0
         while user_selection not in range(1, senses_count + 1):
-            user_selection = input(f"Multiple senses were found for {user_input}. Please choose the number of the correct sense (i.e., 1): ")
+            user_selection = input(
+                f"Multiple senses were found for {user_input}. Please " \
+                 "choose the number of the correct sense (i.e., 1): ")
             try:
                 user_selection = int(user_selection)
             except ValueError:
@@ -108,7 +115,8 @@ def fetch_word(user_input):
     # Finally, apply the slug, sense, and reading.
     expr_data = [
         data[selected_slug].slug,
-        "; ".join(data[selected_slug].senses[selected_sense].english_definitions),
+        "; ".join(
+            data[selected_slug].senses[selected_sense].english_definitions),
         readings[selected_slug]
     ]
 
@@ -117,7 +125,7 @@ def fetch_word(user_input):
 
 def create_card(expr_data, jido_deck):
     anki_note = genanki.Note(
-        model = jido_deck.anki_model,
+        model=jido_deck.anki_model,
         fields=[expr_data[0], expr_data[1], expr_data[2]]
     )
 
@@ -132,14 +140,13 @@ def main():
     deck_name = ""
     output_name = ""
     valid_output_name = False
-    user_input = ""
 
     while deck_name == "":
         deck_name = input("Enter your deck name: ")
     
     jido_session = JidoSession(deck_name)
 
-    while valid_output_name is False:
+    while not valid_output_name:
         output_name = input("Enter your output name (excluding .apkg): ")
         output_name = output_name.strip(" .")
         output_name = "".join(c for c in output_name if c not in '<>:"/\\|?*')
@@ -148,7 +155,9 @@ def main():
             valid_output_name = True
 
     while True:
-        user_input = input("Enter a word ('exit' to exit, 'export' to create .apkg package): ")
+        user_input = input(
+            "Enter a word ('exit' to exit, 'export' to create .apkg " \
+            "package): ")
 
         if user_input == "exit":
             break
