@@ -1,7 +1,6 @@
 from jisho_api.word import Word
 import random
 import genanki
-import json # NOTE: delete
 
 
 class JidoSession:
@@ -163,24 +162,18 @@ def main():
     accents_by_expression = {}
     accents_by_reading = {}
     try:
-        accents_file = open("./data/accents.txt")
-
-        for line in accents_file:
-            expression, reading, pitch_number = line.split("\t")
-            accents_by_expression[expression] = [reading, pitch_number.rstrip()]
-            
-            if reading in accents_by_reading:
-                accents_by_reading[reading].append([expression, pitch_number.rstrip()])
-            else:
-                accents_by_reading[reading] = [[expression, pitch_number.rstrip()]]
+        with open("./data/accents.txt") as accents_file:
+            for line in accents_file:
+                expression, reading, pitch_number = line.split("\t")
+                accents_by_expression[expression] = [reading, pitch_number.rstrip()]
+                
+                if reading in accents_by_reading:
+                    accents_by_reading[reading].append([expression, pitch_number.rstrip()])
+                else:
+                    accents_by_reading[reading] = [[expression, pitch_number.rstrip()]]
     except FileNotFoundError:
         print("accents.txt not found.")
         return
-    
-    # # NOTE: delete
-    with open("test_output.json", "w") as f:
-        json.dump(accents_by_reading, f)
-    # # print(accents_by_reading)
 
     while deck_name == "":
         deck_name = input("Enter your deck name: ")
