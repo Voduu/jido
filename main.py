@@ -157,28 +157,27 @@ def main():
     deck_name = ""
     output_name = ""
     valid_output_name = False
+    jido_session = JidoSession(deck_name)
 
     # Create accent data dictionary
-    accents_by_expression = {}
-    accents_by_reading = {}
+    jido_session.accents_by_expression = {}
+    jido_session.accents_by_reading = {}
     try:
         with open("./data/accents.txt") as accents_file:
             for line in accents_file:
                 expression, reading, pitch_number = line.split("\t")
-                accents_by_expression[expression] = [reading, pitch_number.rstrip()]
+                jido_session.accents_by_expression[expression] = [reading, pitch_number.rstrip()]
                 
-                if reading in accents_by_reading:
-                    accents_by_reading[reading].append([expression, pitch_number.rstrip()])
+                if reading in jido_session.accents_by_reading:
+                    jido_session.accents_by_reading[reading].append([expression, pitch_number.rstrip()])
                 else:
-                    accents_by_reading[reading] = [[expression, pitch_number.rstrip()]]
+                    jido_session.accents_by_reading[reading] = [[expression, pitch_number.rstrip()]]
     except FileNotFoundError:
         print("accents.txt not found.")
         return
 
     while deck_name == "":
         deck_name = input("Enter your deck name: ")
-    
-    jido_session = JidoSession(deck_name)
 
     while not valid_output_name:
         output_name = input("Enter your output name (excluding .apkg): ")
