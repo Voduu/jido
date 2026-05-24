@@ -130,7 +130,7 @@ def fetch_word(user_input):
         data[selected_slug].slug,
         "; ".join(
             data[selected_slug].senses[selected_sense].english_definitions),
-        readings[selected_slug]
+        readings[selected_slug].split("\uff0f")[0]
     )
 
     return jido_card
