@@ -41,10 +41,10 @@ class Card:
     sentence_english = ""
     
 
-    def ___init__(self, expr_data):
-        self.expr = expr_data[0]
-        self.expr_meaning = expr_data[1]
-        self.expr_reading = expr_data[2]
+    def __init__(self, expr, expr_meaning, expr_reading):
+        self.expr = expr
+        self.expr_meaning = expr_meaning
+        self.expr_reading = expr_reading
 
 
 def fetch_word(user_input):
@@ -125,22 +125,26 @@ def fetch_word(user_input):
                 continue
         
         selected_sense = user_selection - 1
-    
-    # Finally, apply the slug, sense, and reading.
-    expr_data = [
+
+    # Finally, create the card.
+    jido_card = Card(
         data[selected_slug].slug,
         "; ".join(
             data[selected_slug].senses[selected_sense].english_definitions),
         readings[selected_slug]
-    ]
+    )
 
-    return expr_data
+    return jido_card
 
 
-def create_note(expr_data, jido_session):
+def create_note(jido_session, jido_card):
     anki_note = genanki.Note(
         model=jido_session.anki_model,
-        fields=[expr_data[0], expr_data[1], expr_data[2]]
+        fields=[
+            jido_card.expr,
+            jido_card.expr_meaning,
+            jido_card.expr_reading
+        ]
     )
 
     jido_session.add_note(anki_note)
@@ -181,12 +185,12 @@ def main():
             break
         
         # Retrieve Jisho data.
-        expr_data = fetch_word(user_input)
-        if expr_data is None:
+        jido_card = fetch_word(user_input)
+        if jido_card is None:
             continue
 
         # Create card.
-        create_note(expr_data, jido_session)
+        create_note(jido_session, jido_card)
 
 
 if __name__ == "__main__":
