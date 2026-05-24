@@ -139,6 +139,7 @@ def fetch_word(user_input):
 
 def fetch_pitch_accent(jido_session, jido_card):
     # Find the expression in one of the dictionaries.
+    return None
 
 
 def create_note(jido_session, jido_card):
@@ -155,7 +156,7 @@ def create_note(jido_session, jido_card):
 
 
 def export_deck(output_name, jido_session):
-    genanki.Package(jido_session.anki_deck).write_to_file(output_name + ".apkg")
+    genanki.Package(jido_session.anki_deck).write_to_file("./output/" + output_name + ".apkg")
 
 
 def main():
