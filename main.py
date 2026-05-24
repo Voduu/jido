@@ -32,6 +32,19 @@ class JidoSession:
 
     def add_note(self, anki_note):
         self.anki_deck.add_note(anki_note)
+    
+
+class Card:
+    pitch_accent = ""
+    pitch_accent_type = 0
+    sentence_japanese = ""
+    sentence_english = ""
+    
+
+    def ___init__(self, expr_data):
+        self.expr = expr_data[0]
+        self.expr_meaning = expr_data[1]
+        self.expr_reading = expr_data[2]
 
 
 def fetch_word(user_input):
@@ -124,17 +137,17 @@ def fetch_word(user_input):
     return expr_data
 
 
-def create_card(expr_data, jido_deck):
+def create_note(expr_data, jido_session):
     anki_note = genanki.Note(
-        model=jido_deck.anki_model,
+        model=jido_session.anki_model,
         fields=[expr_data[0], expr_data[1], expr_data[2]]
     )
 
-    jido_deck.add_note(anki_note)
+    jido_session.add_note(anki_note)
 
 
-def export_deck(output_name, jido_deck):
-    genanki.Package(jido_deck.anki_deck).write_to_file(output_name + ".apkg")
+def export_deck(output_name, jido_session):
+    genanki.Package(jido_session.anki_deck).write_to_file(output_name + ".apkg")
 
 
 def main():
@@ -173,7 +186,7 @@ def main():
             continue
 
         # Create card.
-        create_card(expr_data, jido_session)
+        create_note(expr_data, jido_session)
 
 
 if __name__ == "__main__":
