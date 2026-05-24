@@ -5,6 +5,8 @@ import genanki
 
 class JidoSession:
     def __init__(self, deck_name):
+        self.accents_by_expression = {}
+        self.accents_by_reading = {}
         model_id = random.randrange(1 << 30, 1 << 31)
         deck_id = random.randrange(1 << 30, 1 << 31)
 
@@ -35,15 +37,14 @@ class JidoSession:
     
 
 class Card:
-    pitch_accent = ""
-    pitch_accent_type = 0
-    sentence_japanese = ""
-    sentence_english = ""
-    
     def __init__(self, expr, expr_meaning, expr_reading):
         self.expr = expr
         self.expr_meaning = expr_meaning
         self.expr_reading = expr_reading
+        self.pitch_accent = ""
+        self.pitch_accent_type = 0
+        self.sentence_japanese = ""
+        self.sentence_english = ""
 
 
 def fetch_word(user_input):
@@ -160,8 +161,6 @@ def main():
     jido_session = JidoSession(deck_name)
 
     # Create accent data dictionary
-    jido_session.accents_by_expression = {}
-    jido_session.accents_by_reading = {}
     try:
         with open("./data/accents.txt") as accents_file:
             for line in accents_file:
