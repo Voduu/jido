@@ -40,7 +40,6 @@ class Card:
     sentence_japanese = ""
     sentence_english = ""
     
-
     def __init__(self, expr, expr_meaning, expr_reading):
         self.expr = expr
         self.expr_meaning = expr_meaning
@@ -166,7 +165,7 @@ def main():
 
     while not valid_output_name:
         output_name = input("Enter your output name (excluding .apkg): ")
-        output_name = output_name.strip(" .")
+        output_name = output_name.lower().strip(" .").replace(" ", "-")
         output_name = "".join(c for c in output_name if c not in '<>:"/\\|?*')
 
         if len(output_name) > 0:
