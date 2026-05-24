@@ -137,6 +137,10 @@ def fetch_word(user_input):
     return jido_card
 
 
+def fetch_pitch_accent(jido_session, jido_card):
+    # Find the expression in one of the dictionaries.
+
+
 def create_note(jido_session, jido_card):
     anki_note = genanki.Note(
         model=jido_session.anki_model,
@@ -203,7 +207,10 @@ def main():
         if jido_card is None:
             continue
 
-        # Create card.
+        # Retrieve pitch accent data.
+        
+
+        # Create note.
         create_note(jido_session, jido_card)
 
 
