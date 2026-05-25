@@ -128,7 +128,7 @@ def fetch_word(user_input):
 
     # Finally, create the card.
     jido_card = Card(
-        data[selected_slug].slug,
+        "".join(c for c in data[selected_slug].slug if c not in "-0123456789"),
         "; ".join(
             data[selected_slug].senses[selected_sense].english_definitions),
         readings[selected_slug].split("\uff0f")[0]
@@ -138,8 +138,27 @@ def fetch_word(user_input):
 
 
 def fetch_pitch_accent(jido_session, jido_card):
+    expr = jido_card.expr
+    reading = jido_card.expr_reading
+    reading_found = False
+    pitch_data = 0
+
+
     # Find the expression in one of the dictionaries.
-    return None
+    if expr in jido_session.accents_by_expression:
+        accent_data = jido_session.accents_by_expression[expr]
+        print(accent_data)
+        for i in range(len(accent_data)):
+            if accent_data[i][0] == reading:
+                pitch_data = int(accent_data[i][1].split(",")[0])
+                reading_found = True
+                print(f"Reading found for {expr}: {accent_data[i][0]}.")
+                print(f"Pitch accent for {expr}: {pitch_data}.")
+    # NOTE: add handling for kana-only edge cases
+    # elif reading in jido_session.accents_by_reading:
+
+    if not reading_found:
+        pass            
 
 
 def create_note(jido_session, jido_card):
@@ -170,7 +189,11 @@ def main():
         with open("./data/accents.txt") as accents_file:
             for line in accents_file:
                 expression, reading, pitch_number = line.split("\t")
-                jido_session.accents_by_expression[expression] = [reading, pitch_number.rstrip()]
+                
+                if expression in jido_session.accents_by_expression:
+                    jido_session.accents_by_expression[expression].append([reading, pitch_number.rstrip()])
+                else:
+                    jido_session.accents_by_expression[expression] = [[reading, pitch_number.rstrip()]]
                 
                 if reading in jido_session.accents_by_reading:
                     jido_session.accents_by_reading[reading].append([expression, pitch_number.rstrip()])
@@ -209,7 +232,7 @@ def main():
             continue
 
         # Retrieve pitch accent data.
-        
+        fetch_pitch_accent(jido_session, jido_card)
 
         # Create note.
         create_note(jido_session, jido_card)
