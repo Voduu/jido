@@ -141,7 +141,7 @@ def fetch_pitch_accent(jido_session, jido_card):
     expr = jido_card.expr
     reading = jido_card.expr_reading
     reading_found = False
-    pitch_data = 0
+    pitch_number = 0
 
 
     # Find the expression in one of the dictionaries.
@@ -150,10 +150,10 @@ def fetch_pitch_accent(jido_session, jido_card):
         print(accent_data)
         for i in range(len(accent_data)):
             if accent_data[i][0] == reading:
-                pitch_data = int(accent_data[i][1].split(",")[0])
+                pitch_number = int(accent_data[i][1].split(",")[0])
                 reading_found = True
                 print(f"Reading found for {expr}: {accent_data[i][0]}.")
-                print(f"Pitch accent for {expr}: {pitch_data}.")
+                print(f"Pitch accent for {expr}: {pitch_number}.")
     # NOTE: add handling for kana-only edge cases
     # elif reading in jido_session.accents_by_reading:
 
@@ -182,13 +182,25 @@ def main():
     deck_name = ""
     output_name = ""
     valid_output_name = False
-    jido_session = JidoSession(deck_name)
 
+    while deck_name == "":
+        deck_name = input("Enter your deck name: ")
+
+    while not valid_output_name:
+        output_name = input("Enter your output name (excluding .apkg): ")
+        output_name = output_name.lower().strip(" .").replace(" ", "-")
+        output_name = "".join(c for c in output_name if c not in '<>:"/\\|?*')
+
+        if len(output_name) > 0:
+            valid_output_name = True
+    
+    jido_session = JidoSession(deck_name)
     # Create accent data dictionary
     try:
         with open("./data/accents.txt") as accents_file:
             for line in accents_file:
                 expression, reading, pitch_number = line.split("\t")
+                pitch_number = "".join(c for c in pitch_number if c in "0123456789,")
                 
                 if expression in jido_session.accents_by_expression:
                     jido_session.accents_by_expression[expression].append([reading, pitch_number.rstrip()])
@@ -202,17 +214,6 @@ def main():
     except FileNotFoundError:
         print("accents.txt not found.")
         return
-
-    while deck_name == "":
-        deck_name = input("Enter your deck name: ")
-
-    while not valid_output_name:
-        output_name = input("Enter your output name (excluding .apkg): ")
-        output_name = output_name.lower().strip(" .").replace(" ", "-")
-        output_name = "".join(c for c in output_name if c not in '<>:"/\\|?*')
-
-        if len(output_name) > 0:
-            valid_output_name = True
 
     while True:
         user_input = input(
