@@ -187,43 +187,42 @@ def fetch_pitch_accent(jido_session, jido_card):
             if 0 <= pitch_number <= mora_length:
                 valid_input = True
 
-    if reading_found:
-        # Heiban
-        if pitch_number == 0:
-            jido_card.pitch_accent_type = 1
-            for i in range(mora_length + 1):
-                if i == 0:
-                    pitch_string = "L"
-                elif i > 0:
-                    pitch_string += "H"
-        # Atamadaka
-        elif pitch_number == 1:
-            jido_card.pitch_accent_type = 2
-            for i in range(mora_length + 1):
-                if i == 0:
-                    pitch_string = "H"
-                elif i > 0:
-                    pitch_string += "L"
-        # Nakadaka
-        elif 1 < pitch_number < mora_length:
-            jido_card.pitch_accent_type = 3
-            for i in range(mora_length + 1):
-                if i == 0:
-                    pitch_string = "L"
-                elif 0 < i <= pitch_number - 1:
-                    pitch_string += "H"
-                elif i > pitch_number - 1:
-                    pitch_string += "L"
-        # Odakagata
-        elif pitch_number == mora_length:
-            jido_card.pitch_accent_type = 4
-            for i in range(mora_length + 1):
-                if i == 0:
-                    pitch_string = "L"
-                elif 0 < i <= pitch_number - 1:
-                    pitch_string += "H"
-                elif i > pitch_number - 1:
-                    pitch_string += "L"
+    # Heiban
+    if pitch_number == 0:
+        jido_card.pitch_accent_type = 1
+        for i in range(mora_length + 1):
+            if i == 0:
+                pitch_string = "L"
+            elif i > 0:
+                pitch_string += "H"
+    # Atamadaka
+    elif pitch_number == 1:
+        jido_card.pitch_accent_type = 2
+        for i in range(mora_length + 1):
+            if i == 0:
+                pitch_string = "H"
+            elif i > 0:
+                pitch_string += "L"
+    # Nakadaka
+    elif 1 < pitch_number < mora_length:
+        jido_card.pitch_accent_type = 3
+        for i in range(mora_length + 1):
+            if i == 0:
+                pitch_string = "L"
+            elif 0 < i <= pitch_number - 1:
+                pitch_string += "H"
+            elif i > pitch_number - 1:
+                pitch_string += "L"
+    # Odakagata
+    elif pitch_number == mora_length:
+        jido_card.pitch_accent_type = 4
+        for i in range(mora_length + 1):
+            if i == 0:
+                pitch_string = "L"
+            elif 0 < i <= pitch_number - 1:
+                pitch_string += "H"
+            elif i > pitch_number - 1:
+                pitch_string += "L"
     
     print(f"Pitch Accent Type: {jido_card.pitch_accent_type}.")
     # Develop the SVG based on the pitch_string.
