@@ -79,6 +79,12 @@ def fetch_word(user_input):
         # where the word=None as it has no kanji.
         slug_readings = []
         for j in range(len(data[i].japanese)):
+            # Handle kana only words.
+            if data[i].japanese[j].word == None:
+                if data[i].japanese[j].reading == user_input:
+                    slug_readings.append(data[i].japanese[j].reading)
+            
+            # Kanji words.
             if data[i].japanese[j].word == user_input:
                 slug_readings.append(data[i].japanese[j].reading)
         readings.append("\uff0f".join(slug_readings))
@@ -161,8 +167,14 @@ def fetch_pitch_accent(jido_session, jido_card):
             if accent_data[i][0] == reading:
                 pitch_number = int(accent_data[i][1].split(",")[0])
                 reading_found = True
-                print(f"Reading found for {expr}: {accent_data[i][0]}.")
-                print(f"Pitch accent for {expr}: {pitch_number}.")
+            # Kana only words
+            elif accent_data[i][0] == "":
+                pitch_number = int(accent_data[i][1].split(",")[0])
+                reading_found = True
+            
+            # NOTE: REMOVE DEBUG
+            print(f"Reading found for {expr}: {accent_data[i][0]}.")
+            print(f"Pitch accent for {expr}: {pitch_number}.")
     # NOTE: add handling for kana-only edge cases
     # elif reading in jido_session.accents_by_reading:
 
