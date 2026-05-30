@@ -17,12 +17,14 @@ class JidoSession:
                 {"name": "Expression"},
                 {"name": "Meaning"},
                 {"name": "Reading"},
+                {"name": "Pitch Accent"},
+                {"name": "Pitch Type"}
             ],
             templates=[
                 {
                     "name": "Card 1",
                     "qfmt": "{{Expression}}",
-                    "afmt": "{{Expression}}<hr>{{Reading}}<hr>{{Meaning}}"
+                    "afmt": "{{Expression}}<hr>{{Reading}}<hr>{{Meaning}}<br>{{Pitch Accent}}"
                 }
             ]
         )
@@ -42,7 +44,7 @@ class Card:
         self.expr_meaning = expr_meaning
         self.expr_reading = expr_reading
         self.pitch_accent = ""
-        self.pitch_accent_type = 0
+        self.pitch_accent_type = "0"
         self.sentence_japanese = ""
         self.sentence_english = ""
 
@@ -192,7 +194,7 @@ def fetch_pitch_accent(jido_session, jido_card):
 
     # Heiban
     if pitch_number == 0:
-        jido_card.pitch_accent_type = 1
+        jido_card.pitch_accent_type = "1"
         for i in range(mora_length + 1):
             if i == 0:
                 pitch_string = "L"
@@ -200,7 +202,7 @@ def fetch_pitch_accent(jido_session, jido_card):
                 pitch_string += "H"
     # Atamadaka
     elif pitch_number == 1:
-        jido_card.pitch_accent_type = 2
+        jido_card.pitch_accent_type = "2"
         for i in range(mora_length + 1):
             if i == 0:
                 pitch_string = "H"
@@ -208,7 +210,7 @@ def fetch_pitch_accent(jido_session, jido_card):
                 pitch_string += "L"
     # Nakadaka
     elif 1 < pitch_number < mora_length:
-        jido_card.pitch_accent_type = 3
+        jido_card.pitch_accent_type = "3"
         for i in range(mora_length + 1):
             if i == 0:
                 pitch_string = "L"
@@ -218,7 +220,7 @@ def fetch_pitch_accent(jido_session, jido_card):
                 pitch_string += "L"
     # Odakagata
     elif pitch_number == mora_length:
-        jido_card.pitch_accent_type = 4
+        jido_card.pitch_accent_type = "4"
         for i in range(mora_length + 1):
             if i == 0:
                 pitch_string = "L"
@@ -320,7 +322,8 @@ def fetch_pitch_accent(jido_session, jido_card):
 
     svg_full_string = svg_str_1 + str(svg_width) + svg_str_2 + str(svg_width) + svg_str_3 + kana_str + line_str + dot_str + svg_str_4
 
-    print(svg_full_string)
+    # print(svg_full_string)
+    jido_card.pitch_accent = svg_full_string
     
 
 
@@ -330,7 +333,9 @@ def create_note(jido_session, jido_card):
         fields=[
             jido_card.expr,
             jido_card.expr_meaning,
-            jido_card.expr_reading
+            jido_card.expr_reading,
+            jido_card.pitch_accent,
+            jido_card.pitch_accent_type
         ]
     )
 
