@@ -178,7 +178,14 @@ def fetch_pitch_accent(jido_session, jido_card):
     # NOTE: add handling for kana-only edge cases
     # elif reading in jido_session.accents_by_reading:
 
-    # NOTE: REMOVE
+    if not reading_found:
+        valid_input = False
+        while not valid_input:
+            pitch_number = input(
+                "No pitch accent data found. Please enter the downstep " \
+                f"position for {expr}: ")
+            if 0 <= pitch_number <= mora_length:
+                valid_input = True
 
     if reading_found:
         # Heiban
@@ -217,10 +224,6 @@ def fetch_pitch_accent(jido_session, jido_card):
                     pitch_string += "H"
                 elif i > pitch_number - 1:
                     pitch_string += "L"
-    else:
-        # Prompt the user to manually add.
-        # User will set both pitch_accent_type and pitch_string.
-        pass
     
     print(f"Pitch Accent Type: {jido_card.pitch_accent_type}.")
     # Develop the SVG based on the pitch_string.
