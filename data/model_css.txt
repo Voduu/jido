@@ -1,0 +1,144 @@
+/* === Global Card Styling === */
+.card {
+  font-family: "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Meiryo", "Yu Gothic UI", sans-serif;
+  text-align: center;
+  font-size: 32px;
+  line-height: 1.6;
+  padding: 25px;
+  border-radius: 10px;
+  transition: background 0.3s, color 0.3s;
+}
+
+/* === Adaptive Colors (Dark + Light Mode) === */
+:root {
+  --bg-light: #f5f5f5;
+  --bg-dark: #1e1e1e;
+  --text-light: #222;
+  --text-dark: #e8e8e8;
+  --muted-light: #555;
+  --muted-dark: #b7b7b7;
+  --dim-light: #888;
+  --dim-dark: #999;
+  --accent-light: #005bbb;
+  --accent-dark: #6aa8ff; /* available if ever needed */
+}
+
+/* Light mode defaults */
+.card { background-color: var(--bg-light); color: var(--text-light); }
+
+/* Dark mode override */
+@media (prefers-color-scheme: dark) {
+  .card { background-color: var(--bg-dark); color: var(--text-dark); }
+}
+
+/* === Element Styles === */
+.expression {
+  font-size: 52px;
+  font-weight: 700;
+  color: var(--text-dark); /* baseline; accent color applied via .accent-* on this element */
+}
+
+.reading {
+  font-size: 26px;
+  color: var(--muted-dark);
+  margin-top: 6px;
+}
+
+/* Keep Meaning always neutral and same size on all cards */
+.meaning {
+  font-size: 28px;
+  color: var(--text-dark) !important; /* prevent accidental inheritance from accent parents */
+  margin-bottom: 15px;
+}
+
+.pitch {
+  font-size: 22px;
+  color: var(--dim-dark);
+  margin-top: 8px;
+}
+
+.sentence {
+  font-size: 26px;
+  color: var(--text-dark);
+  margin-top: 25px;
+}
+
+.sentence-meaning {
+  font-size: 24px;
+  color: var(--muted-dark);
+  margin-top: 10px;
+}
+
+.screenshot img {
+  max-width: 90%;
+  max-height: 280px;
+  border-radius: 8px;
+  margin-top: 10px;
+  opacity: 0.85;
+}
+
+.screenshot img {
+  max-width: 90%;
+  max-height: 280px;
+  border-radius: 8px;
+  margin-top: 10px;
+  opacity: 0.85;
+}
+
+.notes {
+  font-size: 20px;
+  color: var(--dim-dark);
+  margin-top: 25px;
+}
+
+/* === Furigana === */
+ruby rt {
+  font-size: 0.55em;
+  color: var(--muted-dark);
+  font-weight: normal;
+}
+
+/* === Divider === */
+hr {
+  margin: 25px auto;
+  width: 70%;
+  border: none;
+  border-top: 1px solid rgba(255,255,255,0.25);
+}
+
+/* === NO special styling for Card 2 front/back meaning === */
+/* (Intentionally empty to keep Card 1 and Card 2 backs identical) */
+
+/* ---- Pitch Accent graph color fix (Japanese Pitch Accent add-on) ---- */
+.nightMode .pitch svg.pitch,
+.nightMode .pitch img,
+.nightMode svg.pitch {
+  filter: invert(1) brightness(1.15) contrast(0.9);
+}
+@media (prefers-color-scheme: dark) {
+  .pitch svg.pitch,
+  .pitch img,
+  svg.pitch {
+    filter: invert(1) brightness(1.15) contrast(0.9);
+  }
+}
+
+/* === Accent color mapping by Pitch Type (1–4) === */
+/* Apply these classes directly to the .expression (and only where you want color). */
+.accent-1 { color: #8dd36f; }  /* Heiban */
+.accent-2 { color: #ff6961; }  /* Atamadaka */
+.accent-3 { color: #6fa8dc; }  /* Nakadaka */
+.accent-4 { color: #ffb347; }  /* Odaka */
+
+/* Optional underline using current accent color (disabled)
+.expression::after {
+  content: '';
+  display: block;
+  height: 3px;
+  margin: 6px auto 0;
+  width: 60%;
+  border-radius: 2px;
+  background-color: currentColor;
+  opacity: 0.85;
+}
+*/

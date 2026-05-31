@@ -43,6 +43,9 @@ class JidoSession:
 
     def add_note(self, anki_note):
         self.anki_deck.add_note(anki_note)
+    
+    def load_model_css(self):
+        pass
 
     def load_system_prompt(self):
         try:
