@@ -11,6 +11,8 @@ Sentence requirements:
 - Mix polite (ます／です) and casual/plain forms freely
 - Do not default to bare declarative statements — include some situation, contrast, reason, or result
 - Avoid sentences where the target expression could be swapped out for many other words without breaking the sentence
+- The sentence must be one where replacing the target expression with a different word would make it factually wrong, logically incomplete, or nonsensical
+- For adjectives describing appearance or color, place them in a context where that specific quality is relevant to the outcome or situation, not just a neutral description
 
 Vocabulary and grammar scope:
 - The user message will specify the expression, its meaning, its JLPT level, and its pitch formatting number

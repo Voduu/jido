@@ -342,7 +342,7 @@ def fetch_pitch_accent(jido_session, jido_card):
     
 
 def fetch_sentences(jido_session, jido_card):
-    content_message = f"Expression: {jido_card.expr}; Meaning: {jido_card.expr_meaning}; Level: JLPT N4"
+    content_message = f"Expression: {jido_card.expr}; Meaning: {jido_card.expr_meaning}; Level: JLPT N4; Pitch Formatting Number: {jido_card.pitch_accent_type}"
     message = jido_session.client.messages.create(
         model="claude-haiku-4-5-20251001",
         max_tokens=1000,
