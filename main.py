@@ -1,14 +1,17 @@
 from jisho_api.word import Word
 import random
 import genanki
+import anthropic
+import json
 
 
 class JidoSession:
     def __init__(self, deck_name):
         self.accents_by_expression = {}
         self.accents_by_reading = {}
-        model_id = random.randrange(1 << 30, 1 << 31)
+        model_id = 1098463829
         deck_id = random.randrange(1 << 30, 1 << 31)
+        self.client = anthropic.Anthropic()
 
         self.anki_model = genanki.Model(
             model_id,
@@ -17,14 +20,16 @@ class JidoSession:
                 {"name": "Expression"},
                 {"name": "Meaning"},
                 {"name": "Reading"},
+                {"name": "Sentence"},
+                {"name": "Sentence Meaning"},
                 {"name": "Pitch Accent"},
-                {"name": "Pitch Type"}
+                {"name": "Pitch Type"},
             ],
             templates=[
                 {
                     "name": "Card 1",
                     "qfmt": "{{Expression}}",
-                    "afmt": "{{Expression}}<hr>{{Reading}}<hr>{{Meaning}}<br>{{Pitch Accent}}"
+                    "afmt": "{{Expression}}<hr>{{Reading}}<hr>{{Meaning}}<br>{{Sentence}}<br>{{Sentence Meaning}}<br>{{Pitch Accent}}"
                 }
             ]
         )
@@ -34,8 +39,18 @@ class JidoSession:
             deck_name
         )
 
+        self.load_system_prompt()
+
     def add_note(self, anki_note):
         self.anki_deck.add_note(anki_note)
+
+    def load_system_prompt(self):
+        try:
+            with open("./data/system_prompt.txt") as fp:
+                self.client_system_prompt = fp.read()
+        except FileNotFoundError:
+            self.client_system_prompt = None
+            print("ERROR: Failed to load Anthropic client system prompt.")
     
 
 class Card:
@@ -43,10 +58,10 @@ class Card:
         self.expr = expr
         self.expr_meaning = expr_meaning
         self.expr_reading = expr_reading
-        self.pitch_accent = ""
-        self.pitch_accent_type = "0"
         self.sentence_japanese = ""
         self.sentence_english = ""
+        self.pitch_accent = ""
+        self.pitch_accent_type = "0"
 
 
 def fetch_word(user_input):
@@ -55,7 +70,7 @@ def fetch_word(user_input):
         data = Word.request(user_input).data
     except AttributeError:
         return None
-    print(data)
+    # print(data)
 
     if len(data) == 0:
         print(f"No match found for {user_input}.")
@@ -326,6 +341,28 @@ def fetch_pitch_accent(jido_session, jido_card):
     jido_card.pitch_accent = svg_full_string
     
 
+def fetch_sentences(jido_session, jido_card):
+    content_message = f"Expression: {jido_card.expr}; Meaning: {jido_card.expr_meaning}; Level: JLPT N4"
+    message = jido_session.client.messages.create(
+        model="claude-haiku-4-5-20251001",
+        max_tokens=1000,
+        system=jido_session.client_system_prompt,
+        messages=[
+            {
+                "role": "user",
+                "content": content_message
+            }
+        ]
+    )
+
+    sentence_data = json.loads(message.content[0].text)
+
+    print(f"Japanese: {sentence_data["japanese"]}")
+    print(f"English: {sentence_data["english"]}")
+    jido_card.sentence_japanese = sentence_data["japanese"]
+    jido_card.sentence_english = sentence_data["english"]
+    # print(f"English: {message.content[0].text}")
+
 
 def create_note(jido_session, jido_card):
     anki_note = genanki.Note(
@@ -334,6 +371,8 @@ def create_note(jido_session, jido_card):
             jido_card.expr,
             jido_card.expr_meaning,
             jido_card.expr_reading,
+            jido_card.sentence_japanese,
+            jido_card.sentence_english,
             jido_card.pitch_accent,
             jido_card.pitch_accent_type
         ]
@@ -402,6 +441,9 @@ def main():
 
         # Retrieve pitch accent data.
         fetch_pitch_accent(jido_session, jido_card)
+
+        # Retrieve sentence data.
+        fetch_sentences(jido_session, jido_card)
 
         # Create note.
         create_note(jido_session, jido_card)
