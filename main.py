@@ -3,6 +3,8 @@ import random
 import genanki
 import anthropic
 import json
+import os
+from dotenv import load_dotenv, dotenv_values
 
 
 class JidoSession:
@@ -11,7 +13,9 @@ class JidoSession:
         self.accents_by_reading = {}
         model_id = 1098463829
         deck_id = random.randrange(1 << 30, 1 << 31)
-        self.client = anthropic.Anthropic()
+        load_dotenv()
+        self.claude_api_key = os.getenv("CLAUDE_CONSOLE_KEY")
+        self.client = anthropic.Anthropic(api_key=self.claude_api_key)
 
         self.anki_model = genanki.Model(
             model_id,
