@@ -362,13 +362,18 @@ def fetch_sentences(jido_session, jido_card):
         ]
     )
 
-    sentence_data = json.loads(message.content[0].text)
+    try:
+        sentence_data = json.loads(message.content[0].text)
+        # print(f"Japanese: {sentence_data["japanese"]}")
+        # print(f"English: {sentence_data["english"]}")
 
-    print(f"Japanese: {sentence_data["japanese"]}")
-    print(f"English: {sentence_data["english"]}")
-    jido_card.sentence_japanese = sentence_data["japanese"]
-    jido_card.sentence_english = sentence_data["english"]
-    # print(f"English: {message.content[0].text}")
+        jido_card.sentence_japanese = sentence_data["japanese"]
+        jido_card.sentence_english = sentence_data["english"]
+    except:
+        print(f"Unable to generate sentence for {jido_card.expr}.")
+
+        jido_card.sentence_japanese = ""
+        jido_card.sentence_english = ""
 
 
 def create_note(jido_session, jido_card):
