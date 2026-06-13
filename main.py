@@ -5,6 +5,8 @@ import anthropic
 import json
 import os
 from dotenv import load_dotenv, dotenv_values
+import azure.cognitiveservices.speech as speechsdk
+import re
 
 
 class JidoSession:
@@ -13,9 +15,18 @@ class JidoSession:
         self.accents_by_reading = {}
         model_id = 1098463829
         deck_id = random.randrange(1 << 30, 1 << 31)
+
+        # Sentence generation variables
         load_dotenv()
-        self.claude_api_key = os.getenv("CLAUDE_CONSOLE_KEY")
-        self.client = anthropic.Anthropic(api_key=self.claude_api_key)
+        self.client = anthropic.Anthropic(api_key=os.getenv("CLAUDE_CONSOLE_KEY"))
+
+        # Audio generation variables
+        self.speech_config = speechsdk.SpeechConfig(subscription=os.getenv("SPEECH_KEY"), endpoint=os.getenv("ENDPOINT"))
+        self.audio_config = speechsdk.audio.AudioOutputConfig(use_default_speaker=True)
+        self.audio_config = speechsdk.audio.AudioOutputConfig(filename="output.mp3")
+        self.speech_config.speech_synthesis_voice_name="ja-JP-NanamiNeural"
+        # self.speech_config.set_speech_synthesis_output_format(speechsdk.SpeechSynthesisOutputFormat.Audio24Khz160KBitRateMonoMp3)
+        self.speech_synthesizer = speechsdk.SpeechSynthesizer(speech_config=self.speech_config, audio_config=self.audio_config)
 
         self.anki_model = genanki.Model(
             model_id,
@@ -66,6 +77,7 @@ class Card:
         self.expr_meaning = expr_meaning
         self.expr_reading = expr_reading
         self.sentence_japanese = ""
+        self.sentence_japanese_clean = ""
         self.sentence_english = ""
         self.pitch_accent = ""
         self.pitch_accent_type = "0"
@@ -364,16 +376,34 @@ def fetch_sentences(jido_session, jido_card):
 
     try:
         sentence_data = json.loads(message.content[0].text)
-        # print(f"Japanese: {sentence_data["japanese"]}")
-        # print(f"English: {sentence_data["english"]}")
+        print(f"Japanese: {sentence_data["japanese"]}")
+        print(f"English: {sentence_data["english"]}")
 
         jido_card.sentence_japanese = sentence_data["japanese"]
         jido_card.sentence_english = sentence_data["english"]
+
+        # Clean Japanese sentence for Azure TTS.
+        jido_card.sentence_japanese_clean = re.sub(r"<.*?>", "", sentence_data["japanese"])
+        print(f"Clean Japanese string: {jido_card.sentence_japanese_clean}")
     except:
         print(f"Unable to generate sentence for {jido_card.expr}.")
 
         jido_card.sentence_japanese = ""
         jido_card.sentence_english = ""
+
+def fetch_audio(jido_session, jido_card):
+    expression_audio = jido_session.speech_synthesizer.speak_text_async(jido_card.expr).get()
+    sentence_audio = jido_session.speech_synthesizer.speak_text_async(jido_card.sentence_japanese_clean).get()
+
+    if expression_audio.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
+        print("Speech synthesized for text [{}]".format(jido_card.expr))
+    elif expression_audio.reason == speechsdk.ResultReason.Canceled:
+        cancellation_details = expression_audio.cancellation_details
+        print("Speech synthesis canceled: {}".format(cancellation_details.reason))
+        if cancellation_details.reason == speechsdk.CancellationReason.Error:
+            if cancellation_details.error_details:
+                print("Error details: {}".format(cancellation_details.error_details))
+                print("Did you set the speech resource key and endpoint values?")
 
 
 def create_note(jido_session, jido_card):
@@ -456,6 +486,9 @@ def main():
 
         # Retrieve sentence data.
         fetch_sentences(jido_session, jido_card)
+
+        # Retrieve audio data.
+        fetch_audio(jido_session, jido_card)
 
         # Create note.
         create_note(jido_session, jido_card)
