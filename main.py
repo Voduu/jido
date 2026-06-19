@@ -22,8 +22,6 @@ class JidoSession:
 
         # Audio generation variables
         self.speech_config = speechsdk.SpeechConfig(subscription=os.getenv("SPEECH_KEY"), endpoint=os.getenv("ENDPOINT"))
-        # self.audio_config = speechsdk.audio.AudioOutputConfig(use_default_speaker=False)
-        # self.audio_config = speechsdk.audio.AudioOutputConfig(filename="output.mp3")
         self.speech_config.speech_synthesis_voice_name="ja-JP-NanamiNeural"
         self.speech_config.set_speech_synthesis_output_format(speechsdk.SpeechSynthesisOutputFormat.Audio24Khz160KBitRateMonoMp3)
         self.speech_synthesizer = speechsdk.SpeechSynthesizer(speech_config=self.speech_config, audio_config=None)
@@ -398,20 +396,37 @@ def fetch_sentences(jido_session, jido_card):
         jido_card.sentence_english = ""
 
 def fetch_audio(jido_session, jido_card):
-    expression_audio = jido_session.speech_synthesizer.speak_text_async(jido_card.expr).get()
-    expression_stream = speechsdk.AudioDataStream(expression_audio)
-    expression_audio_path = "./output/audio/" + jido_card.expr + "_expr.mp3"
-    expression_stream.save_to_wav_file(expression_audio_path)
-    jido_card.audio = "[sound:" + jido_card.expr + "_expr.mp3]"
-    jido_session.media_files.append("./output/audio/" + jido_card.expr + "_expr.mp3")
+    for i in range(2):
+        try:
+            expression_audio = jido_session.speech_synthesizer.speak_text_async(jido_card.expr).get()
+            expression_stream = speechsdk.AudioDataStream(expression_audio)
+            expression_audio_path = "./output/audio/" + jido_card.expr + "_expr.mp3"
+            expression_stream.save_to_wav_file(expression_audio_path)
+            jido_card.audio = "[sound:" + jido_card.expr + "_expr.mp3]"
+            jido_session.media_files.append("./output/audio/" + jido_card.expr + "_expr.mp3")
+            break
+        except:
+            if i == 0:
+                print(f"Error obtaining expression audio for {jido_card.expr}. Retrying once...")
+            else:
+                print(f"Failed to obtain expression audio for {jido_card.expr}. Continuing without audio.")
+                jido_card.audio = ""
 
-
-    sentence_audio = jido_session.speech_synthesizer.speak_text_async(jido_card.sentence_japanese_clean).get()
-    sentence_stream = speechsdk.AudioDataStream(sentence_audio)
-    sentence_audio_path = "./output/audio/" + jido_card.expr + "_sentence.mp3"
-    sentence_stream.save_to_wav_file(sentence_audio_path)
-    jido_card.audio_sentence = "[sound:" + jido_card.expr + "_sentence.mp3]"
-    jido_session.media_files.append("./output/audio/" + jido_card.expr + "_sentence.mp3")
+    for i in range(2):
+        try:
+            sentence_audio = jido_session.speech_synthesizer.speak_text_async(jido_card.sentence_japanese_clean).get()
+            sentence_stream = speechsdk.AudioDataStream(sentence_audio)
+            sentence_audio_path = "./output/audio/" + jido_card.expr + "_sentence.mp3"
+            sentence_stream.save_to_wav_file(sentence_audio_path)
+            jido_card.audio_sentence = "[sound:" + jido_card.expr + "_sentence.mp3]"
+            jido_session.media_files.append("./output/audio/" + jido_card.expr + "_sentence.mp3")
+            break
+        except:
+            if i == 0:
+                print(f"Error obtaining sentence audio for {jido_card.expr}. Retrying once...")
+            else:
+                print(f"Failed to otbain sentence audio for {jido_card.expr}. Continuing without audio.")
+                jido_card.audio_sentence = ""
 
     # if expression_audio.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
     #     print("Speech synthesized for text [{}]".format(jido_card.expr))
