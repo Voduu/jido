@@ -41,15 +41,38 @@ class JidoSession:
                 {"name": "Pitch Type"},
                 {"name": "Audio"},
                 {"name": "Sentence Audio"},
+                {"name": "Notes"},
             ],
             templates=[
                 {
                     "name": "Card 1",
-                    "qfmt": "{{Expression}}",
-                    "afmt": "{{Expression}}<hr>{{Reading}}<hr>{{Meaning}}<br>{{Sentence}}<br>{{Sentence Meaning}}<br>{{Pitch Accent}}<br>{{Audio}}<br>{{Sentence Audio}}"
-                }
+                    "qfmt": self.load_text_file("./data/card1_front.html",
+                        "Unable to load Card 1 Front HTML data. Reverting " \
+                        "to default.",
+                        "{{Expression}}"),
+                    "afmt": self.load_text_file("./data/card1_back.html",
+                        "Unable to load Card 1 Back HTML data. Reverting " \
+                        "to default.",
+                        "{{Expression}}<hr>{{Reading}}<hr>{{Meaning}}<br>" \
+                        "{{Sentence}}<br>{{Sentence Meaning}}<br>" \
+                        "{{Pitch Accent}}<br>{{Audio}}<br>{{Sentence Audio}}")
+                },
+                {
+                    "name": "Card 2",
+                    "qfmt": self.load_text_file("./data/card2_front.html",
+                        "Unable to load Card 2 Front HTML data. Reverting " \
+                        "to default.",
+                        "{{Audio}} {{Sentence Audio}}"),
+                    "afmt": self.load_text_file("./data/card2_back.html",
+                        "Unable to load Card 2 Back HTML data. Reverting " \
+                        "to default.",
+                        "{{Expression}}<hr>{{Reading}}<hr>{{Meaning}}<br>" \
+                        "{{Sentence}}<br>{{Sentence Meaning}}<br>" \
+                        "{{Pitch Accent}}")
+                },
             ],
-            css=self.load_model_css()
+            css=self.load_text_file("./data/model_css.txt",
+                "No CSS file found. Continuing without.")
         )
 
         self.anki_deck = genanki.Deck(
@@ -61,14 +84,14 @@ class JidoSession:
 
     def add_note(self, anki_note):
         self.anki_deck.add_note(anki_note)
-    
-    def load_model_css(self):
+
+    def load_text_file(self, path, error_message, default=""):
         try:
-            with open("./data/model_css.txt") as fp:
+            with open(path) as fp:
                 return fp.read()
         except FileNotFoundError:
-            print(f"No CSS file found. Continuing without.")
-            return ""
+            print(error_message)
+            return default
 
     def load_system_prompt(self):
         try:
@@ -91,6 +114,7 @@ class Card:
         self.pitch_accent_type = "0"
         self.audio = None
         self.audio_sentence = None
+        self.notes = ""
 
 
 def fetch_word(user_input):
@@ -457,7 +481,8 @@ def create_note(jido_session, jido_card):
             jido_card.pitch_accent,
             jido_card.pitch_accent_type,
             jido_card.audio,
-            jido_card.audio_sentence
+            jido_card.audio_sentence,
+            jido_card.notes
         ]
     )
 
