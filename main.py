@@ -48,7 +48,8 @@ class JidoSession:
                     "qfmt": "{{Expression}}",
                     "afmt": "{{Expression}}<hr>{{Reading}}<hr>{{Meaning}}<br>{{Sentence}}<br>{{Sentence Meaning}}<br>{{Pitch Accent}}<br>{{Audio}}<br>{{Sentence Audio}}"
                 }
-            ]
+            ],
+            css=self.load_model_css()
         )
 
         self.anki_deck = genanki.Deck(
@@ -62,7 +63,12 @@ class JidoSession:
         self.anki_deck.add_note(anki_note)
     
     def load_model_css(self):
-        pass
+        try:
+            with open("./data/model_css.txt") as fp:
+                return fp.read()
+        except FileNotFoundError:
+            print(f"No CSS file found. Continuing without.")
+            return ""
 
     def load_system_prompt(self):
         try:
