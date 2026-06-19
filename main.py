@@ -22,11 +22,13 @@ class JidoSession:
 
         # Audio generation variables
         self.speech_config = speechsdk.SpeechConfig(subscription=os.getenv("SPEECH_KEY"), endpoint=os.getenv("ENDPOINT"))
-        self.audio_config = speechsdk.audio.AudioOutputConfig(use_default_speaker=True)
-        self.audio_config = speechsdk.audio.AudioOutputConfig(filename="output.mp3")
+        # self.audio_config = speechsdk.audio.AudioOutputConfig(use_default_speaker=False)
+        # self.audio_config = speechsdk.audio.AudioOutputConfig(filename="output.mp3")
         self.speech_config.speech_synthesis_voice_name="ja-JP-NanamiNeural"
-        # self.speech_config.set_speech_synthesis_output_format(speechsdk.SpeechSynthesisOutputFormat.Audio24Khz160KBitRateMonoMp3)
-        self.speech_synthesizer = speechsdk.SpeechSynthesizer(speech_config=self.speech_config, audio_config=self.audio_config)
+        self.speech_config.set_speech_synthesis_output_format(speechsdk.SpeechSynthesisOutputFormat.Audio24Khz160KBitRateMonoMp3)
+        self.speech_synthesizer = speechsdk.SpeechSynthesizer(speech_config=self.speech_config, audio_config=None)
+
+        self.media_files = []
 
         self.anki_model = genanki.Model(
             model_id,
@@ -39,12 +41,14 @@ class JidoSession:
                 {"name": "Sentence Meaning"},
                 {"name": "Pitch Accent"},
                 {"name": "Pitch Type"},
+                {"name": "Audio"},
+                {"name": "Sentence Audio"},
             ],
             templates=[
                 {
                     "name": "Card 1",
                     "qfmt": "{{Expression}}",
-                    "afmt": "{{Expression}}<hr>{{Reading}}<hr>{{Meaning}}<br>{{Sentence}}<br>{{Sentence Meaning}}<br>{{Pitch Accent}}"
+                    "afmt": "{{Expression}}<hr>{{Reading}}<hr>{{Meaning}}<br>{{Sentence}}<br>{{Sentence Meaning}}<br>{{Pitch Accent}}<br>{{Audio}}<br>{{Sentence Audio}}"
                 }
             ]
         )
@@ -81,6 +85,8 @@ class Card:
         self.sentence_english = ""
         self.pitch_accent = ""
         self.pitch_accent_type = "0"
+        self.audio = None
+        self.audio_sentence = None
 
 
 def fetch_word(user_input):
@@ -393,17 +399,29 @@ def fetch_sentences(jido_session, jido_card):
 
 def fetch_audio(jido_session, jido_card):
     expression_audio = jido_session.speech_synthesizer.speak_text_async(jido_card.expr).get()
-    sentence_audio = jido_session.speech_synthesizer.speak_text_async(jido_card.sentence_japanese_clean).get()
+    expression_stream = speechsdk.AudioDataStream(expression_audio)
+    expression_audio_path = "./output/audio/" + jido_card.expr + "_expr.mp3"
+    expression_stream.save_to_wav_file(expression_audio_path)
+    jido_card.audio = "[sound:" + jido_card.expr + "_expr.mp3]"
+    jido_session.media_files.append("./output/audio/" + jido_card.expr + "_expr.mp3")
 
-    if expression_audio.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
-        print("Speech synthesized for text [{}]".format(jido_card.expr))
-    elif expression_audio.reason == speechsdk.ResultReason.Canceled:
-        cancellation_details = expression_audio.cancellation_details
-        print("Speech synthesis canceled: {}".format(cancellation_details.reason))
-        if cancellation_details.reason == speechsdk.CancellationReason.Error:
-            if cancellation_details.error_details:
-                print("Error details: {}".format(cancellation_details.error_details))
-                print("Did you set the speech resource key and endpoint values?")
+
+    sentence_audio = jido_session.speech_synthesizer.speak_text_async(jido_card.sentence_japanese_clean).get()
+    sentence_stream = speechsdk.AudioDataStream(sentence_audio)
+    sentence_audio_path = "./output/audio/" + jido_card.expr + "_sentence.mp3"
+    sentence_stream.save_to_wav_file(sentence_audio_path)
+    jido_card.audio_sentence = "[sound:" + jido_card.expr + "_sentence.mp3]"
+    jido_session.media_files.append("./output/audio/" + jido_card.expr + "_sentence.mp3")
+
+    # if expression_audio.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
+    #     print("Speech synthesized for text [{}]".format(jido_card.expr))
+    # elif expression_audio.reason == speechsdk.ResultReason.Canceled:
+    #     cancellation_details = expression_audio.cancellation_details
+    #     print("Speech synthesis canceled: {}".format(cancellation_details.reason))
+    #     if cancellation_details.reason == speechsdk.CancellationReason.Error:
+    #         if cancellation_details.error_details:
+    #             print("Error details: {}".format(cancellation_details.error_details))
+    #             print("Did you set the speech resource key and endpoint values?")
 
 
 def create_note(jido_session, jido_card):
@@ -416,7 +434,9 @@ def create_note(jido_session, jido_card):
             jido_card.sentence_japanese,
             jido_card.sentence_english,
             jido_card.pitch_accent,
-            jido_card.pitch_accent_type
+            jido_card.pitch_accent_type,
+            jido_card.audio,
+            jido_card.audio_sentence
         ]
     )
 
@@ -424,7 +444,14 @@ def create_note(jido_session, jido_card):
 
 
 def export_deck(output_name, jido_session):
-    genanki.Package(jido_session.anki_deck).write_to_file("./output/" + output_name + ".apkg")
+
+    print(jido_session.media_files)
+    for item in jido_session.media_files:
+        print(os.path.exists(item))
+
+    jido_package = genanki.Package(jido_session.anki_deck)
+    jido_package.media_files = jido_session.media_files
+    jido_package.write_to_file("./output/packages/" + output_name + ".apkg")
 
 
 def main():
