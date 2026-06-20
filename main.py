@@ -18,13 +18,18 @@ class JidoSession:
 
         # Sentence generation variables
         load_dotenv()
-        self.client = anthropic.Anthropic(api_key=os.getenv("CLAUDE_CONSOLE_KEY"))
+        self.client = anthropic.Anthropic(
+            api_key=os.getenv("CLAUDE_CONSOLE_KEY"))
 
         # Audio generation variables
-        self.speech_config = speechsdk.SpeechConfig(subscription=os.getenv("SPEECH_KEY"), endpoint=os.getenv("ENDPOINT"))
-        self.speech_config.speech_synthesis_voice_name="ja-JP-NanamiNeural"
-        self.speech_config.set_speech_synthesis_output_format(speechsdk.SpeechSynthesisOutputFormat.Audio24Khz160KBitRateMonoMp3)
-        self.speech_synthesizer = speechsdk.SpeechSynthesizer(speech_config=self.speech_config, audio_config=None)
+        self.speech_config = speechsdk.SpeechConfig(
+            subscription=os.getenv("SPEECH_KEY"),
+            endpoint=os.getenv("ENDPOINT"))
+        self.speech_config.speech_synthesis_voice_name = "ja-JP-NanamiNeural"
+        self.speech_config.set_speech_synthesis_output_format(
+            speechsdk.SpeechSynthesisOutputFormat.Audio24Khz160KBitRateMonoMp3)
+        self.speech_synthesizer = speechsdk.SpeechSynthesizer(
+            speech_config=self.speech_config, audio_config=None)
 
         self.media_files = []
 
@@ -46,32 +51,37 @@ class JidoSession:
             templates=[
                 {
                     "name": "Card 1",
-                    "qfmt": self.load_text_file("./data/card1_front.html",
-                        "Unable to load Card 1 Front HTML data. Reverting " \
+                    "qfmt": self.load_text_file(
+                        "./data/card1_front.html",
+                        "Unable to load Card 1 Front HTML data. Reverting "
                         "to default.",
                         "{{Expression}}"),
-                    "afmt": self.load_text_file("./data/card1_back.html",
-                        "Unable to load Card 1 Back HTML data. Reverting " \
+                    "afmt": self.load_text_file(
+                        "./data/card1_back.html",
+                        "Unable to load Card 1 Back HTML data. Reverting "
                         "to default.",
-                        "{{Expression}}<hr>{{Reading}}<hr>{{Meaning}}<br>" \
-                        "{{Sentence}}<br>{{Sentence Meaning}}<br>" \
+                        "{{Expression}}<hr>{{Reading}}<hr>{{Meaning}}<br>"
+                        "{{Sentence}}<br>{{Sentence Meaning}}<br>"
                         "{{Pitch Accent}}<br>{{Audio}}<br>{{Sentence Audio}}")
                 },
                 {
                     "name": "Card 2",
-                    "qfmt": self.load_text_file("./data/card2_front.html",
-                        "Unable to load Card 2 Front HTML data. Reverting " \
+                    "qfmt": self.load_text_file(
+                        "./data/card2_front.html",
+                        "Unable to load Card 2 Front HTML data. Reverting "
                         "to default.",
                         "{{Audio}} {{Sentence Audio}}"),
-                    "afmt": self.load_text_file("./data/card2_back.html",
-                        "Unable to load Card 2 Back HTML data. Reverting " \
+                    "afmt": self.load_text_file(
+                        "./data/card2_back.html",
+                        "Unable to load Card 2 Back HTML data. Reverting "
                         "to default.",
-                        "{{Expression}}<hr>{{Reading}}<hr>{{Meaning}}<br>" \
-                        "{{Sentence}}<br>{{Sentence Meaning}}<br>" \
+                        "{{Expression}}<hr>{{Reading}}<hr>{{Meaning}}<br>"
+                        "{{Sentence}}<br>{{Sentence Meaning}}<br>"
                         "{{Pitch Accent}}")
                 },
             ],
-            css=self.load_text_file("./data/model_css.txt",
+            css=self.load_text_file(
+                "./data/model_css.txt",
                 "No CSS file found. Continuing without.")
         )
 
@@ -173,7 +183,7 @@ def fetch_word(user_input):
         user_selection = 0
         while user_selection not in range(1, slug_count + 1):
             user_selection = input(
-                f"Multiple readings were found for {user_input}. Please " \
+                f"Multiple readings were found for {user_input}. Please "
                  "choose the number of the correct reading (i.e., 1): ")
             try:
                 user_selection = int(user_selection)
@@ -193,7 +203,7 @@ def fetch_word(user_input):
         user_selection = 0
         while user_selection not in range(1, senses_count + 1):
             user_selection = input(
-                f"Multiple senses were found for {user_input}. Please " \
+                f"Multiple senses were found for {user_input}. Please "
                  "choose the number of the correct sense (i.e., 1): ")
             try:
                 user_selection = int(user_selection)
@@ -253,7 +263,7 @@ def fetch_pitch_accent(jido_session, jido_card):
         while not valid_input:
             try:
                 pitch_number = int(input(
-                    "No pitch accent data found. Please enter the downstep " \
+                    "No pitch accent data found. Please enter the downstep "
                     f"position for {expr}: "))
                 if 0 <= pitch_number <= mora_length:
                     valid_input = True
@@ -303,8 +313,14 @@ def fetch_pitch_accent(jido_session, jido_card):
     kana_str = ""
     kana_pos = 5
     svg_kana_1 = '<text x="'
-    svg_kana_2_normal_kana = '" y="67.5" style="font-size:20px;font-family:sans-serif;fill:#000;">'
-    svg_kana_2_small_kana = '" y="67.5" style="font-size:14px;font-family:sans-serif;fill:#000;">'
+    svg_kana_2_normal_kana = (
+        '" y="67.5" style="font-size:20px;'
+        'font-family:sans-serif;fill:#000;">'
+    )
+    svg_kana_2_small_kana = (
+        '" y="67.5" style="font-size:14px;'
+        'font-family:sans-serif;fill:#000;">'
+    )
     svg_kana_3 = '</text>'
 
     count = 1
@@ -312,13 +328,19 @@ def fetch_pitch_accent(jido_session, jido_card):
         # If this is not the last kana, check for a small kana next
         if (count != reading_length and reading[count] in small_kana):
             kana_pos -= 5
-            kana_str += svg_kana_1 + str(kana_pos) + svg_kana_2_normal_kana + reading[count - 1] + svg_kana_3
+            kana_str += (
+                svg_kana_1 + str(kana_pos) + svg_kana_2_normal_kana 
+                + reading[count - 1] + svg_kana_3)
             kana_pos += 17
-            kana_str += svg_kana_1 + str(kana_pos) + svg_kana_2_small_kana + reading[count] + svg_kana_3
+            kana_str += (
+                svg_kana_1 + str(kana_pos) + svg_kana_2_small_kana 
+                + reading[count] + svg_kana_3)
             kana_pos += 23
             count += 1
         else:
-            kana_str += svg_kana_1 + str(kana_pos) + svg_kana_2_normal_kana + reading[count - 1] + svg_kana_3
+            kana_str += (
+                svg_kana_1 + str(kana_pos) + svg_kana_2_normal_kana 
+                + reading[count - 1] + svg_kana_3)
             kana_pos += 35
         count += 1
 
@@ -342,13 +364,17 @@ def fetch_pitch_accent(jido_session, jido_card):
                 line_change = line_no_height_change
             elif pitch_string[count] == "L":
                 line_change = line_high_to_low
-            line_str += svg_line_1 + str(line_x_pos) + line_high_pos + line_change + svg_line_2
+            line_str += (
+                svg_line_1 + str(line_x_pos) + line_high_pos + line_change 
+                + svg_line_2)
         elif pitch_string[count - 1] == "L":
             if pitch_string[count] == "H":
                 line_change = line_low_to_high
             elif pitch_string[count] == "L":
                 line_change = line_no_height_change
-            line_str += svg_line_1 + str(line_x_pos) + line_low_pos + line_change + svg_line_2
+            line_str += (
+                svg_line_1 + str(line_x_pos) + line_low_pos + line_change 
+                + svg_line_2)
 
         line_x_pos += 35
         count += 1
@@ -367,15 +393,23 @@ def fetch_pitch_accent(jido_session, jido_card):
 
     for i in range(len(pitch_string)):
         if pitch_string[i] == "H":
-            dot_str += svg_dot_1 + str(dot_x_pos) + svg_dot_2 + dot_high_pos + svg_dot_3
+            dot_str += (
+                svg_dot_1 + str(dot_x_pos) + svg_dot_2 + dot_high_pos 
+                + svg_dot_3)
 
             if i == len(pitch_string) - 1:
-                dot_str += svg_dot_1_hollow + str(dot_x_pos) + svg_dot_2 + dot_high_pos + svg_dot_3_hollow
+                dot_str += (
+                    svg_dot_1_hollow + str(dot_x_pos) + svg_dot_2 
+                    + dot_high_pos + svg_dot_3_hollow)
         elif pitch_string[i] == "L":
-            dot_str += svg_dot_1 + str(dot_x_pos) + svg_dot_2 + dot_low_pos + svg_dot_3
+            dot_str += (
+                svg_dot_1 + str(dot_x_pos) + svg_dot_2 + dot_low_pos 
+                + svg_dot_3)
 
             if i == len(pitch_string) - 1:
-                dot_str += svg_dot_1_hollow + str(dot_x_pos) + svg_dot_2 + dot_low_pos + svg_dot_3_hollow
+                dot_str += (
+                    svg_dot_1_hollow + str(dot_x_pos) + svg_dot_2 
+                    + dot_low_pos + svg_dot_3_hollow)
 
         dot_x_pos += 35
 
@@ -388,14 +422,19 @@ def fetch_pitch_accent(jido_session, jido_card):
     svg_str_3 = ' 75">'
     svg_str_4 = '</svg>'
 
-    svg_full_string = svg_str_1 + str(svg_width) + svg_str_2 + str(svg_width) + svg_str_3 + kana_str + line_str + dot_str + svg_str_4
+    svg_full_string = (
+        svg_str_1 + str(svg_width) + svg_str_2 + str(svg_width) + svg_str_3 
+        + kana_str + line_str + dot_str + svg_str_4)
 
     # print(svg_full_string)
     jido_card.pitch_accent = svg_full_string
     
 
 def fetch_sentences(jido_session, jido_card):
-    content_message = f"Expression: {jido_card.expr}; Meaning: {jido_card.expr_meaning}; Level: JLPT N4; Pitch Formatting Number: {jido_card.pitch_accent_type}"
+    content_message = (
+        f"Expression: {jido_card.expr}; Meaning: {jido_card.expr_meaning}; "
+        "Level: JLPT N4; Pitch Formatting Number: "
+        f"{jido_card.pitch_accent_type}")
     message = jido_session.client.messages.create(
         model="claude-haiku-4-5-20251001",
         max_tokens=1000,
@@ -417,56 +456,71 @@ def fetch_sentences(jido_session, jido_card):
         jido_card.sentence_english = sentence_data["english"]
 
         # Clean Japanese sentence for Azure TTS.
-        jido_card.sentence_japanese_clean = re.sub(r"<.*?>", "", sentence_data["japanese"])
+        jido_card.sentence_japanese_clean = re.sub(
+            r"<.*?>", "", sentence_data["japanese"])
         print(f"Clean Japanese string: {jido_card.sentence_japanese_clean}")
-    except:
+    except (json.JSONDecodeError, KeyError):
         print(f"Unable to generate sentence for {jido_card.expr}.")
 
         jido_card.sentence_japanese = ""
         jido_card.sentence_english = ""
 
+
 def fetch_audio(jido_session, jido_card):
     for i in range(2):
         try:
-            expression_audio = jido_session.speech_synthesizer.speak_text_async(jido_card.expr).get()
+            # expression_audio = jido_session.speech_synthesizer.speak_text_async(jido_card.expr).get()
+            synthesizer = jido_session.speech_synthesizer
+            audio_result = synthesizer.speak_text_async(jido_card.expr)
+
+            expression_audio = audio_result.get()
             expression_stream = speechsdk.AudioDataStream(expression_audio)
-            expression_audio_path = "./output/audio/" + jido_card.expr + "_expr.mp3"
+            expression_audio_path = (
+                "./output/audio/" + jido_card.expr + "_expr.mp3")
             expression_stream.save_to_wav_file(expression_audio_path)
             jido_card.audio = "[sound:" + jido_card.expr + "_expr.mp3]"
-            jido_session.media_files.append("./output/audio/" + jido_card.expr + "_expr.mp3")
+            jido_session.media_files.append(
+                "./output/audio/" + jido_card.expr + "_expr.mp3")
             break
-        except:
+        except Exception:
             if i == 0:
-                print(f"Error obtaining expression audio for {jido_card.expr}. Retrying once...")
+                print(
+                    f"Error obtaining expression audio for {jido_card.expr}. "
+                    "Retrying once...")
             else:
-                print(f"Failed to obtain expression audio for {jido_card.expr}. Continuing without audio.")
+                print(
+                    f"Failed to obtain expression audio for {jido_card.expr}. "
+                    "Continuing without audio.")
                 jido_card.audio = ""
 
     for i in range(2):
         try:
-            sentence_audio = jido_session.speech_synthesizer.speak_text_async(jido_card.sentence_japanese_clean).get()
-            sentence_stream = speechsdk.AudioDataStream(sentence_audio)
-            sentence_audio_path = "./output/audio/" + jido_card.expr + "_sentence.mp3"
-            sentence_stream.save_to_wav_file(sentence_audio_path)
-            jido_card.audio_sentence = "[sound:" + jido_card.expr + "_sentence.mp3]"
-            jido_session.media_files.append("./output/audio/" + jido_card.expr + "_sentence.mp3")
-            break
-        except:
-            if i == 0:
-                print(f"Error obtaining sentence audio for {jido_card.expr}. Retrying once...")
-            else:
-                print(f"Failed to otbain sentence audio for {jido_card.expr}. Continuing without audio.")
-                jido_card.audio_sentence = ""
+            # sentence_audio = jido_session.speech_synthesizer.speak_text_async(jido_card.sentence_japanese_clean).get()
+            
+            synthesizer = jido_session.speech_synthesizer
+            audio_result = synthesizer.speak_text_async(
+                jido_card.sentence_japanese_clean)
 
-    # if expression_audio.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
-    #     print("Speech synthesized for text [{}]".format(jido_card.expr))
-    # elif expression_audio.reason == speechsdk.ResultReason.Canceled:
-    #     cancellation_details = expression_audio.cancellation_details
-    #     print("Speech synthesis canceled: {}".format(cancellation_details.reason))
-    #     if cancellation_details.reason == speechsdk.CancellationReason.Error:
-    #         if cancellation_details.error_details:
-    #             print("Error details: {}".format(cancellation_details.error_details))
-    #             print("Did you set the speech resource key and endpoint values?")
+            sentence_audio = audio_result.get()
+            sentence_stream = speechsdk.AudioDataStream(sentence_audio)
+            sentence_audio_path = (
+                "./output/audio/" + jido_card.expr + "_sentence.mp3")
+            sentence_stream.save_to_wav_file(sentence_audio_path)
+            jido_card.audio_sentence = (
+                "[sound:" + jido_card.expr + "_sentence.mp3]")
+            jido_session.media_files.append(
+                "./output/audio/" + jido_card.expr + "_sentence.mp3")
+            break
+        except Exception:
+            if i == 0:
+                print(
+                    f"Error obtaining sentence audio for {jido_card.expr}. "
+                    "Retrying once...")
+            else:
+                print(
+                    f"Failed to obtain sentence audio for {jido_card.expr}. "
+                    "Continuing without audio.")
+                jido_card.audio_sentence = ""
 
 
 def create_note(jido_session, jido_card):
@@ -522,24 +576,29 @@ def main():
         with open("./data/accents.txt") as accents_file:
             for line in accents_file:
                 expression, reading, pitch_number = line.split("\t")
-                pitch_number = "".join(c for c in pitch_number if c in "0123456789,")
+                pitch_number = "".join(
+                    c for c in pitch_number if c in "0123456789,")
                 
                 if expression in jido_session.accents_by_expression:
-                    jido_session.accents_by_expression[expression].append([reading, pitch_number.rstrip()])
+                    jido_session.accents_by_expression[expression].append(
+                        [reading, pitch_number.rstrip()])
                 else:
-                    jido_session.accents_by_expression[expression] = [[reading, pitch_number.rstrip()]]
+                    jido_session.accents_by_expression[expression] = [
+                        [reading, pitch_number.rstrip()]]
                 
                 if reading in jido_session.accents_by_reading:
-                    jido_session.accents_by_reading[reading].append([expression, pitch_number.rstrip()])
+                    jido_session.accents_by_reading[reading].append(
+                        [expression, pitch_number.rstrip()])
                 else:
-                    jido_session.accents_by_reading[reading] = [[expression, pitch_number.rstrip()]]
+                    jido_session.accents_by_reading[reading] = [
+                        [expression, pitch_number.rstrip()]]
     except FileNotFoundError:
         print("accents.txt not found.")
         return
 
     while True:
         user_input = input(
-            "Enter a word ('exit' to exit, 'export' to create .apkg " \
+            "Enter a word ('exit' to exit, 'export' to create .apkg "
             "package): ")
 
         if user_input == "exit":
