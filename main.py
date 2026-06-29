@@ -125,8 +125,8 @@ class Card:
         self.sentence_english = ""
         self.pitch_accent = ""
         self.pitch_accent_type = "0"
-        self.audio = None
-        self.audio_sentence = None
+        self.audio = ""
+        self.audio_sentence = ""
         self.notes = ""
 
 
@@ -228,13 +228,23 @@ def fetch_word(user_input):
             parsed_slug = "".join(
                 c for c in data[i].slug if c not in "-0123456789")
             
-            if data[i].japanese[0].reading == user_input:
+            reading_match = False
+            for j in range(len(data[i].japanese)):
+                if data[i].japanese[j].reading == user_input:
+                    reading_match = True
+                    break
+            if reading_match:
                 # Check if any senses are usually written using kana alone.
                 senses_list = []
                 for j in range(len(data[i].senses)):
                     if len(data[i].senses[j].tags) == 0:
                         continue
-                    if data[i].senses[j].tags[0] == "Usually written using kana alone":
+                    tag_match = False
+                    for k in range(len(data[i].senses[j].tags)):
+                        if data[i].senses[j].tags[k] == "Usually written using kana alone":
+                            tag_match = True
+                            break
+                    if tag_match:
                         senses_list.append("; ".join(
                                 data[i].senses[j].english_definitions))
 
