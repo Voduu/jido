@@ -162,8 +162,6 @@ def fetch_word(user_input):
             continue
         
         # Handle any number of readings.
-        # NOTE: Will have to later come back and handle kana-only words,
-        # where the word=None as it has no kanji.
         slug_readings = []
         for j in range(len(data[i].japanese)):
             # Handle kana only words.
@@ -299,7 +297,6 @@ def fetch_pitch_accent(jido_session, jido_card):
         accent_data = jido_session.accents_by_expression[expr]
         # print(accent_data)
         for i in range(len(accent_data)):
-            # NOTE: add handling for if it isn't here, prompt user.
             if accent_data[i][0] == reading:
                 pitch_number = int(accent_data[i][1].split(",")[0])
                 reading_found = True
@@ -311,8 +308,6 @@ def fetch_pitch_accent(jido_session, jido_card):
             # NOTE: REMOVE DEBUG
             print(f"Reading found for {expr}: {accent_data[i][0]}.")
             print(f"Pitch accent for {expr}: {pitch_number}.")
-    # NOTE: add handling for kana-only edge cases
-    # elif reading in jido_session.accents_by_reading:
 
     if not reading_found:
         valid_input = False
@@ -525,7 +520,6 @@ def fetch_sentences(jido_session, jido_card):
 def fetch_audio(jido_session, jido_card):
     for i in range(2):
         try:
-            # expression_audio = jido_session.speech_synthesizer.speak_text_async(jido_card.expr).get()
             synthesizer = jido_session.speech_synthesizer
             audio_result = synthesizer.speak_text_async(jido_card.expr)
 
@@ -552,8 +546,6 @@ def fetch_audio(jido_session, jido_card):
 
     for i in range(2):
         try:
-            # sentence_audio = jido_session.speech_synthesizer.speak_text_async(jido_card.sentence_japanese_clean).get()
-            
             synthesizer = jido_session.speech_synthesizer
             audio_result = synthesizer.speak_text_async(
                 jido_card.sentence_japanese_clean)
