@@ -7,6 +7,8 @@ import os
 from dotenv import load_dotenv, dotenv_values
 import azure.cognitiveservices.speech as speechsdk
 import re
+import traceback
+from pathlib import Path
 
 
 class JidoSession:
@@ -113,7 +115,8 @@ class JidoSession:
     
 
 class Card:
-    def __init__(self, expr, expr_meaning, expr_reading):
+    def __init__(self, user_input, expr, expr_meaning, expr_reading):
+        self.user_input = user_input
         self.expr = expr
         self.expr_meaning = expr_meaning
         self.expr_reading = expr_reading
@@ -133,11 +136,15 @@ def fetch_word(user_input):
         data = Word.request(user_input).data
     except AttributeError:
         return None
-    # print(data)
+    print(data)
 
     if len(data) == 0:
         print(f"No match found for {user_input}.")
         return None
+    
+    expression = ""
+    meaning = ""
+    reading = ""
     
     # Search for at least one single matching slug.
     match_found = False
@@ -168,56 +175,105 @@ def fetch_word(user_input):
             if data[i].japanese[j].word == user_input:
                 slug_readings.append(data[i].japanese[j].reading)
         readings.append("\uff0f".join(slug_readings))
+    
+    # If a kana-only or kanji match was found.
+    if match_found:
+        # If there are multiple readings, prompt the user to choose one.
+        selected_slug = 0
+        if slug_count > 1:
+            for i in range(slug_count):
+                print(f"{i + 1}. {user_input}\uff08{readings[i]}\uff09")
+            
+            user_selection = 0
+            while user_selection not in range(1, slug_count + 1):
+                user_selection = input(
+                    f"Multiple readings were found for {user_input}. Please "
+                    "choose the number of the correct reading (i.e., 1): ")
+                try:
+                    user_selection = int(user_selection)
+                except ValueError:
+                    continue
+            
+            selected_slug = user_selection - 1
+        
+        # If there are multiple senses, prompt the user to choose one.
+        senses_count = len(data[selected_slug].senses)
+        selected_sense = 0
+        if senses_count > 1:
+            for i in range(senses_count):
+                print(f"{i + 1}. {"; ".join(
+                    data[selected_slug].senses[i].english_definitions)}")
+            
+            user_selection = 0
+            while user_selection not in range(1, senses_count + 1):
+                user_selection = input(
+                    f"Multiple senses were found for {user_input}. Please "
+                    "choose the number of the correct sense (i.e., 1): ")
+                try:
+                    user_selection = int(user_selection)
+                except ValueError:
+                    continue
+            
+            selected_sense = user_selection - 1
+        
+        expression = "".join(
+            c for c in data[selected_slug].slug if c not in "-01234567890")
+        meaning = "; ".join(
+            data[selected_slug].senses[selected_sense].english_definitions)
+        reading = readings[selected_slug].split("\uff0f")[0]
+
+    # If no matches found, check for rarely used kanji version.
+    if not match_found:
+        reading = user_input
+
+        for i in range(len(data)):
+            parsed_slug = "".join(
+                c for c in data[i].slug if c not in "-0123456789")
+            
+            if data[i].japanese[0].reading == user_input:
+                # Check if any senses are usually written using kana alone.
+                senses_list = []
+                for j in range(len(data[i].senses)):
+                    if len(data[i].senses[j].tags) == 0:
+                        continue
+                    if data[i].senses[j].tags[0] == "Usually written using kana alone":
+                        senses_list.append("; ".join(
+                                data[i].senses[j].english_definitions))
+
+                senses_count = len(senses_list)
+                if senses_count > 1:
+                    user_selection = 0
+                    while user_selection not in range(1, senses_count + 1):
+                        for k in range(senses_count):
+                            print(f"{k + 1}. {senses_list[k]}")
+                        user_selection = input(
+                            f"Multiple senses were found for {user_input}. Please "
+                            "choose the number of the correct sense (i.e., 1): ")
+
+                        try:
+                            user_selection = int(user_selection)
+                        except ValueError:
+                            continue
+                    
+                    expression = parsed_slug
+                    meaning = senses_list[user_selection - 1]
+                    match_found = True
+                elif senses_count == 1:
+                    expression = parsed_slug
+                    meaning = senses_list[0]
+                    match_found = True
 
     # Exit if no matches found.
     if not match_found:
         print(f"No match found for {user_input}.")
         return None
-    
-    # If there are multiple readings, prompt the user to choose one.
-    selected_slug = 0
-    if slug_count > 1:
-        for i in range(slug_count):
-            print(f"{i + 1}. {user_input}\uff08{readings[i]}\uff09")
-        
-        user_selection = 0
-        while user_selection not in range(1, slug_count + 1):
-            user_selection = input(
-                f"Multiple readings were found for {user_input}. Please "
-                 "choose the number of the correct reading (i.e., 1): ")
-            try:
-                user_selection = int(user_selection)
-            except ValueError:
-                continue
-        
-        selected_slug = user_selection - 1
-    
-    # If there are multiple senses, prompt the user to choose one.
-    senses_count = len(data[selected_slug].senses)
-    selected_sense = 0
-    if senses_count > 1:
-        for i in range(senses_count):
-            print(f"{i + 1}. {"; ".join(
-                data[selected_slug].senses[i].english_definitions)}")
-        
-        user_selection = 0
-        while user_selection not in range(1, senses_count + 1):
-            user_selection = input(
-                f"Multiple senses were found for {user_input}. Please "
-                 "choose the number of the correct sense (i.e., 1): ")
-            try:
-                user_selection = int(user_selection)
-            except ValueError:
-                continue
-        
-        selected_sense = user_selection - 1
 
     # Finally, create the card.
     jido_card = Card(
-        "".join(c for c in data[selected_slug].slug if c not in "-0123456789"),
-        "; ".join(
-            data[selected_slug].senses[selected_sense].english_definitions),
-        readings[selected_slug].split("\uff0f")[0]
+        user_input,
+        expression,
+        meaning,
+        reading
     )
 
     # NOTE: REMOVE DEBUG
@@ -432,7 +488,7 @@ def fetch_pitch_accent(jido_session, jido_card):
 
 def fetch_sentences(jido_session, jido_card):
     content_message = (
-        f"Expression: {jido_card.expr}; Meaning: {jido_card.expr_meaning}; "
+        f"Expression: {jido_card.user_input}; Meaning: {jido_card.expr_meaning}; "
         "Level: JLPT N4; Pitch Formatting Number: "
         f"{jido_card.pitch_accent_type}")
     message = jido_session.client.messages.create(
@@ -460,7 +516,7 @@ def fetch_sentences(jido_session, jido_card):
             r"<.*?>", "", sentence_data["japanese"])
         print(f"Clean Japanese string: {jido_card.sentence_japanese_clean}")
     except (json.JSONDecodeError, KeyError):
-        print(f"Unable to generate sentence for {jido_card.expr}.")
+        print(f"Unable to generate sentence for {jido_card.user_input}.")
 
         jido_card.sentence_japanese = ""
         jido_card.sentence_english = ""
@@ -483,6 +539,7 @@ def fetch_audio(jido_session, jido_card):
                 "./output/audio/" + jido_card.expr + "_expr.mp3")
             break
         except Exception:
+            # print(traceback.format_exc())
             if i == 0:
                 print(
                     f"Error obtaining expression audio for {jido_card.expr}. "
@@ -527,7 +584,7 @@ def create_note(jido_session, jido_card):
     anki_note = genanki.Note(
         model=jido_session.anki_model,
         fields=[
-            jido_card.expr,
+            jido_card.user_input,
             jido_card.expr_meaning,
             jido_card.expr_reading,
             jido_card.sentence_japanese,
@@ -595,6 +652,10 @@ def main():
     except FileNotFoundError:
         print("accents.txt not found.")
         return
+    
+    # Ensure required directories exist.
+    Path("./output/audio/").mkdir(parents=True, exist_ok=True)
+    Path("./output/packages/").mkdir(parents=True, exist_ok=True)
 
     while True:
         user_input = input(
