@@ -7,7 +7,6 @@ import os
 from dotenv import load_dotenv, dotenv_values
 import azure.cognitiveservices.speech as speechsdk
 import re
-import traceback
 from pathlib import Path
 
 
@@ -150,6 +149,7 @@ def fetch_word(user_input):
     match_found = False
     slug_count = 0
     readings = []
+    matched_indices = []
     for i in range(len(data)):
         parsed_slug = "".join(
             c for c in data[i].slug if c not in "-0123456789")
@@ -157,6 +157,7 @@ def fetch_word(user_input):
         # Keep track of the number of matches and skip mismatches.
         if parsed_slug == user_input:
             slug_count += 1
+            matched_indices.append(i)
             match_found = True
         else:
             continue
@@ -195,12 +196,13 @@ def fetch_word(user_input):
             selected_slug = user_selection - 1
         
         # If there are multiple senses, prompt the user to choose one.
-        senses_count = len(data[selected_slug].senses)
+        senses_count = len(data[matched_indices[selected_slug]].senses)
         selected_sense = 0
         if senses_count > 1:
             for i in range(senses_count):
                 print(f"{i + 1}. {"; ".join(
-                    data[selected_slug].senses[i].english_definitions)}")
+                    data[matched_indices[selected_slug]]
+                    .senses[i].english_definitions)}")
             
             user_selection = 0
             while user_selection not in range(1, senses_count + 1):
@@ -215,9 +217,11 @@ def fetch_word(user_input):
             selected_sense = user_selection - 1
         
         expression = "".join(
-            c for c in data[selected_slug].slug if c not in "-01234567890")
+            c for c in data[matched_indices[selected_slug]]
+            .slug if c not in "-1234567890")
         meaning = "; ".join(
-            data[selected_slug].senses[selected_sense].english_definitions)
+            data[matched_indices[selected_slug]]
+            .senses[selected_sense].english_definitions)
         reading = readings[selected_slug].split("\uff0f")[0]
 
     # If no matches found, check for rarely used kanji version.
@@ -563,7 +567,6 @@ def fetch_audio(jido_session, jido_card):
                 "./output/audio/" + jido_card.expr + "_expr.mp3")
             break
         except Exception:
-            # print(traceback.format_exc())
             if i == 0:
                 print(
                     f"Error obtaining expression audio for {jido_card.expr}. "
