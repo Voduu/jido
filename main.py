@@ -239,7 +239,8 @@ def fetch_word(user_input):
                 for j in range(len(data[i].senses)):
                     if len(data[i].senses[j].tags) == 0:
                         continue
-                    if "Usually written using kana alone" in data[i].senses[j].tags:
+                    if ("Usually written using kana alone" 
+                            in data[i].senses[j].tags):
                         senses_list.append("; ".join(
                                 data[i].senses[j].english_definitions))
 
@@ -250,8 +251,9 @@ def fetch_word(user_input):
                         for k in range(senses_count):
                             print(f"{k + 1}. {senses_list[k]}")
                         user_selection = input(
-                            f"Multiple senses were found for {user_input}. Please "
-                            "choose the number of the correct sense (i.e., 1): ")
+                            f"Multiple senses were found for {user_input}. "
+                            "Please choose the number of the correct sense "
+                            "(i.e., 1): ")
 
                         try:
                             user_selection = int(user_selection)
@@ -488,8 +490,8 @@ def fetch_pitch_accent(jido_session, jido_card):
 
 def fetch_sentences(jido_session, jido_card):
     content_message = (
-        f"Expression: {jido_card.user_input}; Meaning: {jido_card.expr_meaning}; "
-        "Level: JLPT N4; Pitch Formatting Number: "
+        f"Expression: {jido_card.user_input}; Meaning: "
+        f"{jido_card.expr_meaning}; Level: JLPT N4; Pitch Formatting Number: "
         f"{jido_card.pitch_accent_type}")
     message = jido_session.client.messages.create(
         model="claude-haiku-4-5-20251001",
