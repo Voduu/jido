@@ -135,7 +135,7 @@ def fetch_word(user_input):
         data = Word.request(user_input).data
     except AttributeError:
         return None
-    print(data)
+    # print(data)
 
     if len(data) == 0:
         print(f"No match found for {user_input}.")
@@ -285,9 +285,6 @@ def fetch_word(user_input):
         reading
     )
 
-    # NOTE: REMOVE DEBUG
-    print(f"JIDO_CARD READING: {jido_card.expr_reading}")
-
     return jido_card
 
 
@@ -306,7 +303,6 @@ def fetch_pitch_accent(jido_session, jido_card):
     # Find the expression in one of the dictionaries.
     if expr in jido_session.accents_by_expression:
         accent_data = jido_session.accents_by_expression[expr]
-        # print(accent_data)
         for i in range(len(accent_data)):
             if accent_data[i][0] == reading:
                 pitch_number = int(accent_data[i][1].split(",")[0])
@@ -315,10 +311,6 @@ def fetch_pitch_accent(jido_session, jido_card):
             elif accent_data[i][0] == "":
                 pitch_number = int(accent_data[i][1].split(",")[0])
                 reading_found = True
-            
-            # NOTE: REMOVE DEBUG
-            print(f"Reading found for {expr}: {accent_data[i][0]}.")
-            print(f"Pitch accent for {expr}: {pitch_number}.")
 
     if not reading_found:
         valid_input = False
@@ -369,7 +361,6 @@ def fetch_pitch_accent(jido_session, jido_card):
             elif i > pitch_number - 1:
                 pitch_string += "L"
     
-    print(f"Pitch Accent Type: {jido_card.pitch_accent_type}.")
     # Develop the SVG based on the pitch_string.
     ## First, kana characters along the bottom.
     kana_str = ""
@@ -488,7 +479,6 @@ def fetch_pitch_accent(jido_session, jido_card):
         svg_str_1 + str(svg_width) + svg_str_2 + str(svg_width) + svg_str_3 
         + kana_str + line_str + dot_str + svg_str_4)
 
-    # print(svg_full_string)
     jido_card.pitch_accent = svg_full_string
     
 
@@ -512,8 +502,6 @@ def fetch_sentences(jido_session, jido_card):
 
         try:
             sentence_data = json.loads(message.content[0].text)
-            print(f"Japanese: {sentence_data["japanese"]}")
-            print(f"English: {sentence_data["english"]}")
 
             jido_card.sentence_japanese = sentence_data["japanese"]
             jido_card.sentence_english = sentence_data["english"]
@@ -521,7 +509,6 @@ def fetch_sentences(jido_session, jido_card):
             # Clean Japanese sentence for Azure TTS.
             jido_card.sentence_japanese_clean = re.sub(
                 r"<.*?>", "", sentence_data["japanese"])
-            print(f"Clean Japanese string: {jido_card.sentence_japanese_clean}")
             
             # Check for color formatting.
             if ("<span" in jido_card.sentence_japanese
@@ -606,8 +593,6 @@ def fetch_audio(jido_session, jido_card):
 
 
 def import_csv(jido_session):
-    # Add message about how this process may take a while and requires
-    # human input.
     print(
         "Please note that this process is not entirely automatic.\nIt may "
         "take some time to complete depending on the number of words in the "
@@ -644,7 +629,6 @@ def import_csv(jido_session):
             data = input_file.read().rstrip()
 
             word_list = data.split(delimiter)
-            print(word_list)
     except FileNotFoundError:
         print(
             f"File {input_file_name} not found. Please ensure it is placed in "
@@ -697,11 +681,6 @@ def create_note(jido_session, jido_card):
 
 
 def export_deck(output_name, jido_session):
-
-    print(jido_session.media_files)
-    for item in jido_session.media_files:
-        print(os.path.exists(item))
-
     jido_package = genanki.Package(jido_session.anki_deck)
     jido_package.media_files = jido_session.media_files
     jido_package.write_to_file("./output/packages/" + output_name + ".apkg")
