@@ -628,8 +628,8 @@ def import_csv(jido_session):
     delimiter = ""
     while delimiter == "":
         delimiter = input(
-            "Please enter the character used to delimit each word in the file. "
-            "Use \\n for new line and \\t for tab:")
+            "Please enter the character used to delimit each word in the "
+            "file. Use \\n for new line and \\t for tab:")
     
     # Fix escape delimiters.
     if delimiter == "\\n":
