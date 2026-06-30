@@ -489,39 +489,62 @@ def fetch_pitch_accent(jido_session, jido_card):
     
 
 def fetch_sentences(jido_session, jido_card):
-    content_message = (
-        f"Expression: {jido_card.user_input}; Meaning: "
-        f"{jido_card.expr_meaning}; Level: JLPT N4; Pitch Formatting Number: "
-        f"{jido_card.pitch_accent_type}")
-    message = jido_session.client.messages.create(
-        model="claude-haiku-4-5-20251001",
-        max_tokens=1000,
-        system=jido_session.client_system_prompt,
-        messages=[
-            {
-                "role": "user",
-                "content": content_message
-            }
-        ]
-    )
+    for i in range(2):
+        content_message = (
+            f"Expression: {jido_card.user_input}; Meaning: "
+            f"{jido_card.expr_meaning}; Level: JLPT N4; Pitch Formatting Number: "
+            f"{jido_card.pitch_accent_type}")
+        message = jido_session.client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=1000,
+            system=jido_session.client_system_prompt,
+            messages=[
+                {
+                    "role": "user",
+                    "content": content_message
+                }
+            ]
+        )
 
-    try:
-        sentence_data = json.loads(message.content[0].text)
-        print(f"Japanese: {sentence_data["japanese"]}")
-        print(f"English: {sentence_data["english"]}")
+        try:
+            sentence_data = json.loads(message.content[0].text)
+            print(f"Japanese: {sentence_data["japanese"]}")
+            print(f"English: {sentence_data["english"]}")
 
-        jido_card.sentence_japanese = sentence_data["japanese"]
-        jido_card.sentence_english = sentence_data["english"]
+            jido_card.sentence_japanese = sentence_data["japanese"]
+            jido_card.sentence_english = sentence_data["english"]
 
-        # Clean Japanese sentence for Azure TTS.
-        jido_card.sentence_japanese_clean = re.sub(
-            r"<.*?>", "", sentence_data["japanese"])
-        print(f"Clean Japanese string: {jido_card.sentence_japanese_clean}")
-    except (json.JSONDecodeError, KeyError):
-        print(f"Unable to generate sentence for {jido_card.user_input}.")
-
-        jido_card.sentence_japanese = ""
-        jido_card.sentence_english = ""
+            # Clean Japanese sentence for Azure TTS.
+            jido_card.sentence_japanese_clean = re.sub(
+                r"<.*?>", "", sentence_data["japanese"])
+            print(f"Clean Japanese string: {jido_card.sentence_japanese_clean}")
+            
+            # Check for color formatting.
+            if ("<span" in jido_card.sentence_japanese
+                    and "<span" in jido_card.sentence_english):
+                break
+            else:
+                if i == 0:
+                    print(
+                         "Error including <span> formatting in the generated"
+                        f" sentence for {jido_card.user_input}. Retrying once"
+                         "...")
+                else:
+                    print(
+                         "Failed to include <span> formatting in the generated"
+                        f" sentence for {jido_card.user_input}. Continuing "
+                         "with an unformated sentence.")
+        except (json.JSONDecodeError, KeyError):
+            if i == 0:
+                print(
+                    f"Error generating sentences for {jido_card.user_input}. "
+                        "Retrying once...")
+            else:
+                print(
+                    f"Failed to generate sentences for {jido_card.user_input}."
+                    " Continuing without sentences.")
+                jido_card.sentence_japanese = ""
+                jido_card.sentence_english = ""
 
 
 def fetch_audio(jido_session, jido_card):
