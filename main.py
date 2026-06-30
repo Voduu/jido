@@ -4,7 +4,7 @@ import genanki
 import anthropic
 import json
 import os
-from dotenv import load_dotenv, dotenv_values
+from dotenv import load_dotenv
 import azure.cognitiveservices.speech as speechsdk
 import re
 from pathlib import Path
@@ -147,7 +147,7 @@ def fetch_word(user_input):
     
     # Search for at least one single matching slug.
     match_found = False
-    slug_count = 0
+    match_count = 0
     readings = []
     matched_indices = []
     for i in range(len(data)):
@@ -156,7 +156,7 @@ def fetch_word(user_input):
 
         # Keep track of the number of matches and skip mismatches.
         if parsed_slug == user_input:
-            slug_count += 1
+            match_count += 1
             matched_indices.append(i)
             match_found = True
         else:
@@ -166,7 +166,7 @@ def fetch_word(user_input):
         slug_readings = []
         for j in range(len(data[i].japanese)):
             # Handle kana only words.
-            if data[i].japanese[j].word == None:
+            if data[i].japanese[j].word is None:
                 if data[i].japanese[j].reading == user_input:
                     slug_readings.append(data[i].japanese[j].reading)
             
@@ -178,13 +178,13 @@ def fetch_word(user_input):
     # If a kana-only or kanji match was found.
     if match_found:
         # If there are multiple readings, prompt the user to choose one.
-        selected_slug = 0
-        if slug_count > 1:
-            for i in range(slug_count):
+        selected_match = 0
+        if match_count > 1:
+            for i in range(match_count):
                 print(f"{i + 1}. {user_input}\uff08{readings[i]}\uff09")
             
             user_selection = 0
-            while user_selection not in range(1, slug_count + 1):
+            while user_selection not in range(1, match_count + 1):
                 user_selection = input(
                     f"Multiple readings were found for {user_input}. Please "
                     "choose the number of the correct reading (i.e., 1): ")
@@ -193,15 +193,15 @@ def fetch_word(user_input):
                 except ValueError:
                     continue
             
-            selected_slug = user_selection - 1
+            selected_match = user_selection - 1
         
         # If there are multiple senses, prompt the user to choose one.
-        senses_count = len(data[matched_indices[selected_slug]].senses)
+        senses_count = len(data[matched_indices[selected_match]].senses)
         selected_sense = 0
         if senses_count > 1:
             for i in range(senses_count):
                 print(f"{i + 1}. {"; ".join(
-                    data[matched_indices[selected_slug]]
+                    data[matched_indices[selected_match]]
                     .senses[i].english_definitions)}")
             
             user_selection = 0
@@ -217,12 +217,12 @@ def fetch_word(user_input):
             selected_sense = user_selection - 1
         
         expression = "".join(
-            c for c in data[matched_indices[selected_slug]]
-            .slug if c not in "-1234567890")
+            c for c in data[matched_indices[selected_match]]
+            .slug if c not in "-0123456789")
         meaning = "; ".join(
-            data[matched_indices[selected_slug]]
+            data[matched_indices[selected_match]]
             .senses[selected_sense].english_definitions)
-        reading = readings[selected_slug].split("\uff0f")[0]
+        reading = readings[selected_match].split("\uff0f")[0]
 
     # If no matches found, check for rarely used kanji version.
     if not match_found:
