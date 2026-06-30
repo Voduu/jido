@@ -771,23 +771,6 @@ def main():
             continue
 
         process_word(user_input, jido_session)
-        
-        # # Retrieve Jisho data.
-        # jido_card = fetch_word(user_input)
-        # if jido_card is None:
-        #     continue
-
-        # # Retrieve pitch accent data.
-        # fetch_pitch_accent(jido_session, jido_card)
-
-        # # Retrieve sentence data.
-        # fetch_sentences(jido_session, jido_card)
-
-        # # Retrieve audio data.
-        # fetch_audio(jido_session, jido_card)
-
-        # # Create note.
-        # create_note(jido_session, jido_card)
 
 
 if __name__ == "__main__":
