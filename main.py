@@ -605,6 +605,77 @@ def fetch_audio(jido_session, jido_card):
                 jido_card.audio_sentence = ""
 
 
+def import_csv(jido_session):
+    # Add message about how this process may take a while and requires
+    # human input.
+    print(
+        "Please note that this process is not entirely automatic.\nIt may "
+        "take some time to complete depending on the number of words in the "
+        "file and will likely require your input.")
+
+    # Prompt the user to place the file in the correct directory and identify
+    # it.
+    input_file_name = ""
+    while input_file_name == "":
+        input_file_name = input(
+            "Please place your .csv or .txt file in the ./input/ directory, "
+            "and provide the name here, including the extension. To cancel, "
+            "type 'cancel': ")
+    
+    if input_file_name == "cancel":
+        return
+
+    delimiter = ""
+    while delimiter == "":
+        delimiter = input(
+            "Please enter the character used to delimit each word in the file. "
+            "Use \\n for new line and \\t for tab:")
+    
+    # Fix escape delimiters.
+    if delimiter == "\\n":
+        delimiter = "\n"
+    elif delimiter == "\\t":
+        delimiter = "\t"
+    
+    # Attempt to load the file.
+    word_list = []
+    try:
+        with open(f"./input/{input_file_name}") as input_file:
+            data = input_file.read().rstrip()
+
+            word_list = data.split(delimiter)
+            print(word_list)
+    except FileNotFoundError:
+        print(
+            f"File {input_file_name} not found. Please ensure it is placed in "
+             "the ./input/ directory.")
+        return
+
+    for word in word_list:
+        if len(word.strip()) > 0:
+            process_word(word, jido_session)
+
+    
+def process_word(user_input, jido_session):
+    # Retrieve Jisho data.
+    jido_card = fetch_word(user_input)
+    if jido_card is None:
+        return
+
+    # Retrieve pitch accent data.
+    fetch_pitch_accent(jido_session, jido_card)
+
+    # Retrieve sentence data.
+    fetch_sentences(jido_session, jido_card)
+
+    # Retrieve audio data.
+    fetch_audio(jido_session, jido_card)
+
+    # Create note.
+    create_note(jido_session, jido_card)
+
+
+
 def create_note(jido_session, jido_card):
     anki_note = genanki.Note(
         model=jido_session.anki_model,
@@ -681,11 +752,12 @@ def main():
     # Ensure required directories exist.
     Path("./output/audio/").mkdir(parents=True, exist_ok=True)
     Path("./output/packages/").mkdir(parents=True, exist_ok=True)
+    Path("./input/").mkdir(parents=True, exist_ok=True)
 
     while True:
         user_input = input(
             "Enter a word ('exit' to exit, 'export' to create .apkg "
-            "package): ")
+            "package, 'csv' to import a csv file): ")
 
         if user_input == "exit":
             break
@@ -693,23 +765,29 @@ def main():
         if user_input == "export":
             export_deck(output_name, jido_session)
             break
-        
-        # Retrieve Jisho data.
-        jido_card = fetch_word(user_input)
-        if jido_card is None:
+
+        if user_input == "csv":
+            import_csv(jido_session)
             continue
 
-        # Retrieve pitch accent data.
-        fetch_pitch_accent(jido_session, jido_card)
+        process_word(user_input, jido_session)
+        
+        # # Retrieve Jisho data.
+        # jido_card = fetch_word(user_input)
+        # if jido_card is None:
+        #     continue
 
-        # Retrieve sentence data.
-        fetch_sentences(jido_session, jido_card)
+        # # Retrieve pitch accent data.
+        # fetch_pitch_accent(jido_session, jido_card)
 
-        # Retrieve audio data.
-        fetch_audio(jido_session, jido_card)
+        # # Retrieve sentence data.
+        # fetch_sentences(jido_session, jido_card)
 
-        # Create note.
-        create_note(jido_session, jido_card)
+        # # Retrieve audio data.
+        # fetch_audio(jido_session, jido_card)
+
+        # # Create note.
+        # create_note(jido_session, jido_card)
 
 
 if __name__ == "__main__":
