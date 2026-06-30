@@ -239,12 +239,7 @@ def fetch_word(user_input):
                 for j in range(len(data[i].senses)):
                     if len(data[i].senses[j].tags) == 0:
                         continue
-                    tag_match = False
-                    for k in range(len(data[i].senses[j].tags)):
-                        if data[i].senses[j].tags[k] == "Usually written using kana alone":
-                            tag_match = True
-                            break
-                    if tag_match:
+                    if "Usually written using kana alone" in data[i].senses[j].tags:
                         senses_list.append("; ".join(
                                 data[i].senses[j].english_definitions))
 
