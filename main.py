@@ -14,6 +14,7 @@ class JidoSession:
     def __init__(self, deck_name):
         self.accents_by_expression = {}
         self.accents_by_reading = {}
+        self.furigana_dataset = {}
         model_id = 1098463829
         deck_id = random.randrange(1 << 30, 1 << 31)
 
@@ -114,11 +115,14 @@ class JidoSession:
     
 
 class Card:
-    def __init__(self, user_input, expr, expr_meaning, expr_reading):
+    def __init__(
+            self, user_input, expr, expr_meaning, expr_reading,
+            expr_reading_furigana):
         self.user_input = user_input
         self.expr = expr
         self.expr_meaning = expr_meaning
         self.expr_reading = expr_reading
+        self.expr_reading_furigana = expr_reading_furigana
         self.sentence_japanese = ""
         self.sentence_japanese_clean = ""
         self.sentence_english = ""
@@ -129,7 +133,7 @@ class Card:
         self.notes = ""
 
 
-def fetch_word(user_input):
+def fetch_word(user_input, jido_session):
     # Retrieve data from Jisho API.
     try:
         data = Word.request(user_input).data
@@ -277,13 +281,50 @@ def fetch_word(user_input):
         print(f"No match found for {user_input}.")
         return None
 
+    # Retrieve the furigana reading for the expression.
+    furigana_found = False
+    expression_match = False
+    if expression in jido_session.furigana_dataset:
+        result = jido_session.furigana_dataset[expression]
+        reading_furigana = ""
+        expression_match = True
+
+        for i in range(len(result)):
+            if result[i][0] == reading:
+                for j in range(len(result[i][1])):
+                    if "rt" in result[i][1][j]:
+                        # Add a space if the previous character is not a 
+                        # bracket (or the string is not empty) for formatting.
+                        if reading_furigana != "" and reading_furigana[-1] != "]":
+                            reading_furigana += " "
+
+                        reading_furigana += (
+                            result[i][1][j]["ruby"] + "[" 
+                            + result[i][1][j]["rt"] + "]")
+                    else:
+                        reading_furigana += result[i][1][j]["ruby"]
+                furigana_found = True
+                break
+
+    # If a match is found but no furigana (mismatched reading, etc.).
+    if expression_match and not furigana_found:
+        print(
+            f"Furigana data found for {user_input} but none matched the "
+            f"reading {reading}. Defaulting to {reading} without furigana.")
+
+    if not furigana_found:
+        reading_furigana = reading
+
     # Finally, create the card.
     jido_card = Card(
         user_input,
         expression,
         meaning,
-        reading
+        reading,
+        reading_furigana
     )
+
+    print(f"Reading: {reading_furigana}")
 
     return jido_card
 
@@ -642,7 +683,7 @@ def import_csv(jido_session):
     
 def process_word(user_input, jido_session):
     # Retrieve Jisho data.
-    jido_card = fetch_word(user_input)
+    jido_card = fetch_word(user_input, jido_session)
     if jido_card is None:
         return
 
@@ -659,14 +700,13 @@ def process_word(user_input, jido_session):
     create_note(jido_session, jido_card)
 
 
-
 def create_note(jido_session, jido_card):
     anki_note = genanki.Note(
         model=jido_session.anki_model,
         fields=[
             jido_card.user_input,
             jido_card.expr_meaning,
-            jido_card.expr_reading,
+            jido_card.expr_reading_furigana,
             jido_card.sentence_japanese,
             jido_card.sentence_english,
             jido_card.pitch_accent,
@@ -726,6 +766,33 @@ def main():
                         [expression, pitch_number.rstrip()]]
     except FileNotFoundError:
         print("accents.txt not found.")
+        return
+    
+    # Create a furigana data dictionary.
+    try:
+        with open("./data/furigana.json", encoding="utf-8-sig") as furigana_file:
+            data = json.load(furigana_file)
+
+            for entry in data:
+                if entry["text"] in jido_session.furigana_dataset:
+                    jido_session.furigana_dataset[entry["text"]].append(
+                        [entry["reading"], entry["furigana"]])
+                else:
+                    jido_session.furigana_dataset[entry["text"]] = [
+                        [entry["reading"], entry["furigana"]]]
+
+
+            # for entry in data:
+            #     jido_session.furigana_dataset[entry["text"]] = [entry["reading"], entry["furigana"]]
+
+        # NOTE: Remove when finished with furigana.
+        # print("\n\nSuccessfully loaded furigana dataset.\n\n")
+        # while True:
+        #     user_input = input("Enter a word: ")
+        #     print(jido_session.furigana_dataset[user_input])
+                 
+    except FileNotFoundError:
+        print("File \"./data/furigana.json\" not found.")
         return
     
     # Ensure required directories exist.
