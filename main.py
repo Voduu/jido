@@ -423,7 +423,7 @@ def fetch_pitch_accent(jido_session, jido_card):
             try:
                 pitch_number = int(input(
                     "No pitch accent data found. Please enter the downstep "
-                    f"position for {expr}: "))
+                    f"position for {jido_card.user_input}: "))
                 if 0 <= pitch_number <= mora_length:
                     valid_input = True
             except ValueError:
