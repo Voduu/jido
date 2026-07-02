@@ -117,7 +117,7 @@ class JidoSession:
 class Card:
     def __init__(
             self, user_input, expr, expr_meaning, expr_reading,
-            expr_reading_furigana):
+            expr_reading_furigana, expr_notes):
         self.user_input = user_input
         self.expr = expr
         self.expr_meaning = expr_meaning
@@ -130,7 +130,7 @@ class Card:
         self.pitch_accent_type = "0"
         self.audio = ""
         self.audio_sentence = ""
-        self.notes = ""
+        self.notes = expr_notes
 
 
 def fetch_word(user_input, jido_session):
@@ -219,6 +219,11 @@ def fetch_word(user_input, jido_session):
                     continue
             
             selected_sense = user_selection - 1
+
+        # Save parts of speech for notes section.
+        sense_notes = (
+            data[matched_indices[selected_match]]
+            .senses[selected_sense].parts_of_speech)
         
         expression = "".join(
             c for c in data[matched_indices[selected_match]]
@@ -243,21 +248,24 @@ def fetch_word(user_input, jido_session):
                     break
             if reading_match:
                 # Check if any senses are usually written using kana alone.
+                senses_list_definitions = []
                 senses_list = []
                 for j in range(len(data[i].senses)):
                     if len(data[i].senses[j].tags) == 0:
                         continue
                     if ("Usually written using kana alone" 
                             in data[i].senses[j].tags):
-                        senses_list.append("; ".join(
+                        senses_list_definitions.append("; ".join(
                                 data[i].senses[j].english_definitions))
+                        senses_list.append(data[i].senses[j])
+                        
 
-                senses_count = len(senses_list)
+                senses_count = len(senses_list_definitions)
                 if senses_count > 1:
                     user_selection = 0
                     while user_selection not in range(1, senses_count + 1):
                         for k in range(senses_count):
-                            print(f"{k + 1}. {senses_list[k]}")
+                            print(f"{k + 1}. {senses_list_definitions[k]}")
                         user_selection = input(
                             f"Multiple senses were found for {user_input}. "
                             "Please choose the number of the correct sense "
@@ -267,13 +275,20 @@ def fetch_word(user_input, jido_session):
                             user_selection = int(user_selection)
                         except ValueError:
                             continue
+
+                    # Save parts of speech for notes section.
+                    sense_notes = (
+                        senses_list[user_selection - 1].parts_of_speech)
                     
                     expression = parsed_slug
-                    meaning = senses_list[user_selection - 1]
+                    meaning = senses_list_definitions[user_selection - 1]
                     match_found = True
                 elif senses_count == 1:
+                    # Save parts of speech for notes section.
+                    sense_notes = senses_list[0].parts_of_speech
+
                     expression = parsed_slug
-                    meaning = senses_list[0]
+                    meaning = senses_list_definitions[0]
                     match_found = True
     
     # Exit if no matches found.
@@ -314,18 +329,68 @@ def fetch_word(user_input, jido_session):
     if not furigana_found:
         reading_furigana = reading
 
+    # Create the notes section.
+    expr_notes = format_speech_parts(sense_notes)
+    print(expr_notes)
+
     # Finally, create the card.
     jido_card = Card(
         user_input,
         expression,
         meaning,
         reading,
-        reading_furigana
+        reading_furigana,
+        expr_notes
     )
 
     print(f"Reading: {reading_furigana}")
 
     return jido_card
+
+
+def format_speech_parts(sense_notes):
+    note_entries = []
+
+    if "Suru verb" in sense_notes:
+        note_entries.append("する動詞")
+    
+    if "Ichidan verb" in sense_notes:
+        note_entries.append("一段動詞")
+    
+    if any(note.startswith("Godan verb") for note in sense_notes):
+        note_entries.append("五段動詞")
+    
+    if "Transitive verb" in sense_notes:
+        note_entries.append("他動詞")
+    
+    if "Intransitive verb" in sense_notes:
+        note_entries.append("自動詞")
+    
+    if "Na-adjective (keiyodoshi)" in sense_notes:
+        note_entries.append("な形容詞")
+    
+    if "I-adjective (keiyoushi)" in sense_notes:
+        note_entries.append("い形容詞")
+    
+    if "Adverb (fukushi)" in sense_notes:
+        note_entries.append("副詞")
+
+    if "Counter" in sense_notes:
+        note_entries.append("助数詞")
+    
+    if "Prefix" in sense_notes:
+        note_entries.append("接頭語")
+    
+    if "Noun, used as a suffix" in sense_notes:
+        note_entries.append("接尾語")
+    
+    if "Expressions (phrases, clauses, etc.)" in sense_notes:
+        note_entries.append("表現")
+    
+    if len(note_entries) > 0:
+        return "\uff0f".join(note_entries)
+    else:
+        return ""
 
 
 def fetch_pitch_accent(jido_session, jido_card):
