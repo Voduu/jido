@@ -275,10 +275,9 @@ def fetch_word(user_input, jido_session):
                     expression = parsed_slug
                     meaning = senses_list[0]
                     match_found = True
-
+    
     # Exit if no matches found.
     if not match_found:
-        print(f"No match found for {user_input}.")
         return None
 
     # Retrieve the furigana reading for the expression.
@@ -684,8 +683,20 @@ def import_csv(jido_session):
 def process_word(user_input, jido_session):
     # Retrieve Jisho data.
     jido_card = fetch_word(user_input, jido_session)
+
+    # If no result, check if the word was entered as a する verb or な adj.
     if jido_card is None:
-        return
+        # な adjective
+        if user_input[-1] == "な":
+            adjusted_user_input = user_input[:-1]
+            jido_card = fetch_word(adjusted_user_input, jido_session)
+        # する verb
+        elif user_input[-2:] == "する":
+            adjusted_user_input = user_input[:-2]
+            jido_card = fetch_word(adjusted_user_input, jido_session)
+        else:
+            print(f"No match found for {user_input}.")
+            return
 
     # Retrieve pitch accent data.
     fetch_pitch_accent(jido_session, jido_card)
