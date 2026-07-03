@@ -139,7 +139,7 @@ def fetch_word(user_input, jido_session):
         data = Word.request(user_input).data
     except AttributeError:
         return None
-    # print(data)
+    print(data)
 
     if len(data) == 0:
         print(f"No match found for {user_input}.")
@@ -331,7 +331,6 @@ def fetch_word(user_input, jido_session):
 
     # Create the notes section.
     expr_notes = format_speech_parts(sense_notes)
-    print(expr_notes)
 
     # Finally, create the card.
     jido_card = Card(
@@ -342,8 +341,6 @@ def fetch_word(user_input, jido_session):
         reading_furigana,
         expr_notes
     )
-
-    print(f"Reading: {reading_furigana}")
 
     return jido_card
 
@@ -708,7 +705,7 @@ def import_csv(jido_session):
     input_file_name = ""
     while input_file_name == "":
         input_file_name = input(
-            "Please place your .csv or .txt file in the ./input/ directory, "
+            "Please place your .csv or .txt file in the \"/input\" directory, "
             "and provide the name here, including the extension. To cancel, "
             "type 'cancel': ")
     
@@ -719,7 +716,7 @@ def import_csv(jido_session):
     while delimiter == "":
         delimiter = input(
             "Please enter the character used to delimit each word in the "
-            "file. Use \\n for new line and \\t for tab:")
+            "file. Use \\n for new line and \\t for tab: ")
     
     # Fix escape delimiters.
     if delimiter == "\\n":
