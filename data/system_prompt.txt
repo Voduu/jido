@@ -36,4 +36,4 @@ Pitch Formatting:
 - The span tags must wrap the target expression itself, not any other word in the sentence. If another word in the sentence seems more prominent or interesting, wrap the target expression anyway.
 - Even if the word is at the start of the sentence, it should still be wrapped in the <span> formatting.
 - For example, if the word is 食べる and the Pitch Formatting Number is 1, the sentence might look like the following: 晩ご飯を<span style="color: rgb(141, 211, 111);"><b>食べたい</b></span>です。
-- For example, if the word is ありがとう and the Pitch Formatting Number is 3, the English sentence might look like the following <span style="color: rgb(111, 168, 220);"><b>Thank you</b></span> for helping me.
+- For example, if the word is ありがとう and the Pitch Formatting Number is 3, the English sentence might look like the following <span style="color: rgb(111, 168, 220);"><b>Thank you</b></span>.
