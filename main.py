@@ -139,77 +139,120 @@ def fetch_word(user_input, jido_session):
         data = Word.request(user_input).data
     except AttributeError:
         return None
-    print(data)
+    # print(data)
 
-    if len(data) == 0:
-        print(f"No match found for {user_input}.")
-        return None
-    
-    expression = ""
-    meaning = ""
-    reading = ""
-    
-    # Search for at least one single matching slug.
-    match_found = False
-    match_count = 0
-    readings = []
-    matched_indices = []
+    # Cycle through the data to find slug matches or 'usually kana' matches.
+    match_list = [None] * len(data)
+    k_matches = []
+    s_matches = []
     for i in range(len(data)):
-        parsed_slug = "".join(
-            c for c in data[i].slug if c not in "-0123456789")
+        parsed_slug = "".join(c for c in data[i].slug if c not in "-0123456789")
 
-        # Keep track of the number of matches and skip mismatches.
+        # If parsed slug matches, mark as slug match.
         if parsed_slug == user_input:
-            match_count += 1
-            matched_indices.append(i)
-            match_found = True
-        else:
+            match_list[i] = "s"
+            s_matches.append(i)
             continue
-        
-        # Handle any number of readings.
-        slug_readings = []
+
+        # If parsed slug does not match, check for reading match (rarely used kanji).
+        usually_kana_match = False
         for j in range(len(data[i].japanese)):
-            # Handle kana only words.
-            if data[i].japanese[j].word is None:
-                if data[i].japanese[j].reading == user_input:
-                    slug_readings.append(data[i].japanese[j].reading)
-            
-            # Kanji words.
-            if data[i].japanese[j].word == user_input:
-                slug_readings.append(data[i].japanese[j].reading)
-        readings.append("\uff0f".join(slug_readings))
-    
-    # If a kana-only or kanji match was found.
-    if match_found:
-        # If there are multiple readings, prompt the user to choose one.
+            if data[i].japanese[j].reading == user_input:
+                usually_kana_match = True
+                break
+
+        # If there is a reading match, check the tags to see if it is usually written in kana.
+        if usually_kana_match:
+            for j in range(len(data[i].senses)):
+                if len(data[i].senses[j].tags) == 0:
+                    continue
+                if "Usually written using kana alone" in data[i].senses[j].tags:
+                    match_list[i] = "k"
+                    k_matches.append(i)
+                    break
+
+        if match_list[i] is None:
+            match_list[i] = "n"
+
+    # Determine which kind of match the word is.
+    if "s" in match_list:
+        match_type = "kanji_kana"
+    elif "k" in match_list:
+        match_type = "rare_kanji"
+    else:
+        return None
+
+    # Handle multiple readings (kanji match only).
+    readings = []
+    if match_type == "kanji_kana":
+        for i in range(len(s_matches)):
+            # NOTE: Removed previous kana only word handling.
+            # See here for history:
+            # https://github.com/Voduu/jido/blob/e2649759daa46f10faa76d6fcf68c50cb92fdc72/main.py
+
+            slug_readings = []
+            for j in range(len(data[s_matches[i]].japanese)):
+                if data[s_matches[i]].japanese[j].word == user_input:
+                    slug_readings.append(data[s_matches[i]].japanese[j].reading)
+
+            # Create string of readings.
+            readings.append("\uff0f".join(slug_readings))
+
+        # Prompt the user to choose the reading.
         selected_match = 0
-        if match_count > 1:
-            for i in range(match_count):
+        if (len(s_matches) > 1):
+            for i in range(len(s_matches)):
                 print(f"{i + 1}. {user_input}\uff08{readings[i]}\uff09")
-            
-            user_selection = 0
-            while user_selection not in range(1, match_count + 1):
+
+                user_selection = 0
+            while user_selection not in range(1, len(s_matches) + 1):
                 user_selection = input(
                     f"Multiple readings were found for {user_input}. Please "
                     "choose the number of the correct reading (i.e., 1): ")
+
                 try:
                     user_selection = int(user_selection)
                 except ValueError:
                     continue
-            
+
             selected_match = user_selection - 1
-        
+
+    # Identify the user's selection in match_list.
+    word_index = -1
+    if match_type == "kanji_kana":
+        word_index = s_matches[selected_match]
+    elif match_type == "rare_kanji" and len(k_matches) == 1:
+        word_index = k_matches[0]
+
+    # Check for multiple senses
+    senses_list = []  # The values are the actual indices of the senses, the index is the displayed number to the user.
+    sense_index = -1
+
+    # If a WordConfig has already been selected.
+    if word_index > -1:
+        # Check if there are more than one valid senses.
+        if match_type == "rare_kanji":
+            for i in range(len(data[word_index].senses)):
+                if ("Usually written using kana alone"
+                        in data[word_index].senses[i].tags and
+                        "Wikipedia definition" not in
+                        data[word_index].senses[i].parts_of_speech):
+                    senses_list.append(i)
+        else:
+            for i in range(len(data[word_index].senses)):
+                if ("Wikipedia definition" not in
+                        data[word_index].senses[i].parts_of_speech):
+                    senses_list.append(i)
+
         # If there are multiple senses, prompt the user to choose one.
-        senses_count = len(data[matched_indices[selected_match]].senses)
-        selected_sense = 0
-        if senses_count > 1:
-            for i in range(senses_count):
+        if len(senses_list) > 1:
+            for i in range(len(senses_list)):
                 print(f"{i + 1}. {"; ".join(
-                    data[matched_indices[selected_match]]
-                    .senses[i].english_definitions)}")
-            
+                    data[word_index].senses[senses_list[i]]
+                    .english_definitions)}")
+
             user_selection = 0
-            while user_selection not in range(1, senses_count + 1):
+            while user_selection not in range (1, len(senses_list) + 1):
                 user_selection = input(
                     f"Multiple senses were found for {user_input}. Please "
                     "choose the number of the correct sense (i.e., 1): ")
@@ -217,83 +260,55 @@ def fetch_word(user_input, jido_session):
                     user_selection = int(user_selection)
                 except ValueError:
                     continue
-            
-            selected_sense = user_selection - 1
 
-        # Save parts of speech for notes section.
-        sense_notes = (
-            data[matched_indices[selected_match]]
-            .senses[selected_sense].parts_of_speech)
-        
-        expression = "".join(
-            c for c in data[matched_indices[selected_match]]
-            .slug if c not in "-0123456789")
-        meaning = "; ".join(
-            data[matched_indices[selected_match]]
-            .senses[selected_sense].english_definitions)
+            sense_index = senses_list[user_selection - 1]
+
+        # If there is only a single matching sense.
+        else:
+            sense_index = senses_list[0]
+
+    # If a WordConfig has not been selected ("usually kana" word matching to multiple WordConfigs)
+    else:
+        word_sense_index_tuple = []  # First number is the WordConfig index, second is sense index.
+        for i in range(len(k_matches)):
+            for j in range(len(data[k_matches[i]].senses)):
+                if ("Usually written using kana alone"
+                        in data[k_matches[i]].senses[j].tags and
+                        "Wikipedia definition" not in
+                        data[k_matches[i]].senses[j].parts_of_speech):
+                    word_sense_index_tuple.append((k_matches[i], j))
+
+        # Prompt the user to choose the desired sense.
+        for i in range(len(word_sense_index_tuple)):
+            print(f"{i + 1}. {"; ".join(
+                data[word_sense_index_tuple[i][0]]
+                .senses[word_sense_index_tuple[i][1]]
+                .english_definitions)}")
+
+        user_selection = 0
+        while user_selection not in range (1, len(word_sense_index_tuple) + 1):
+            user_selection = input(
+                f"Multiple senses were found for {user_input}. Please "
+                "choose the number of the correct sense (i.e., 1): ")
+            try:
+                user_selection = int(user_selection)
+            except ValueError:
+                continue
+
+        # Finally, set word_index and sense_index.
+        word_index = word_sense_index_tuple[user_selection - 1][0]
+        sense_index = word_sense_index_tuple[user_selection - 1][1]
+
+    # Save parts of the word.
+    expression = "".join(
+        c for c in data[word_index].slug if c not in "-0123456789")
+    meaning = "; ".join(
+        data[word_index].senses[sense_index].english_definitions)
+    sense_notes = data[word_index].senses[sense_index].parts_of_speech
+    if match_type == "kanji_kana":
         reading = readings[selected_match].split("\uff0f")[0]
-
-    # If no matches found, check for rarely used kanji version.
-    if not match_found:
+    else:
         reading = user_input
-
-        for i in range(len(data)):
-            parsed_slug = "".join(
-                c for c in data[i].slug if c not in "-0123456789")
-            
-            reading_match = False
-            for j in range(len(data[i].japanese)):
-                if data[i].japanese[j].reading == user_input:
-                    reading_match = True
-                    break
-            if reading_match:
-                # Check if any senses are usually written using kana alone.
-                senses_list_definitions = []
-                senses_list = []
-                for j in range(len(data[i].senses)):
-                    if len(data[i].senses[j].tags) == 0:
-                        continue
-                    if ("Usually written using kana alone" 
-                            in data[i].senses[j].tags):
-                        senses_list_definitions.append("; ".join(
-                                data[i].senses[j].english_definitions))
-                        senses_list.append(data[i].senses[j])
-                        
-
-                senses_count = len(senses_list_definitions)
-                if senses_count > 1:
-                    user_selection = 0
-                    while user_selection not in range(1, senses_count + 1):
-                        for k in range(senses_count):
-                            print(f"{k + 1}. {senses_list_definitions[k]}")
-                        user_selection = input(
-                            f"Multiple senses were found for {user_input}. "
-                            "Please choose the number of the correct sense "
-                            "(i.e., 1): ")
-
-                        try:
-                            user_selection = int(user_selection)
-                        except ValueError:
-                            continue
-
-                    # Save parts of speech for notes section.
-                    sense_notes = (
-                        senses_list[user_selection - 1].parts_of_speech)
-                    
-                    expression = parsed_slug
-                    meaning = senses_list_definitions[user_selection - 1]
-                    match_found = True
-                elif senses_count == 1:
-                    # Save parts of speech for notes section.
-                    sense_notes = senses_list[0].parts_of_speech
-
-                    expression = parsed_slug
-                    meaning = senses_list_definitions[0]
-                    match_found = True
-    
-    # Exit if no matches found.
-    if not match_found:
-        return None
 
     # Retrieve the furigana reading for the expression.
     furigana_found = False
@@ -602,8 +617,13 @@ def fetch_sentences(jido_session, jido_card):
             ]
         )
 
+        for block in message.content:
+            if block.type == "text":
+                message_content = block
+                print(block.text)
+
         try:
-            sentence_data = json.loads(message.content[0].text)
+            sentence_data = json.loads(message_content.text)
 
             jido_card.sentence_japanese = sentence_data["japanese"]
             jido_card.sentence_english = sentence_data["english"]
