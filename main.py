@@ -13,6 +13,9 @@ import requests
 
 class JidoSession:
     def __init__(self, deck_name):
+        self.cards_log = []
+        self.cards_failed = []
+
         self.accents_by_expression = {}
         self.accents_by_reading = {}
         self.furigana_dataset = {}
@@ -132,6 +135,13 @@ class Card:
         self.audio = ""
         self.audio_sentence = ""
         self.notes = expr_notes
+
+        self.status_jisho = None
+        self.status_furigana = None
+        self.status_pitch_accent = None
+        self.status_sentence = None
+        self.status_audio_expr = None
+        self.status_audio_sentence = None
 
 
 def fetch_word(user_input, jido_session):
@@ -340,14 +350,24 @@ def fetch_word(user_input, jido_session):
                 furigana_found = True
                 break
 
-    # If a match is found but no furigana (mismatched reading, etc.).
-    if expression_match and not furigana_found:
-        print(
-            f"Furigana data found for {user_input} but none matched the "
-            f"reading {reading}. Defaulting to {reading} without furigana.")
-
+    furigana_status = ""
     if not furigana_found:
-        reading_furigana = reading
+
+        # If a match is found but no furigana (mismatched reading, etc.).
+        if expression_match:
+            print(
+                f"Furigana data found for {user_input} but none matched the "
+                f"reading {reading}. Defaulting to {reading} without "
+                 "furigana.")
+            reading_furigana = reading
+            furigana_status = "mismatch"
+        # If a match is not found.
+        else:
+            print(
+                f"Furigana data not found for {user_input}. Defaulting to "
+                f"{reading} without furigana.")
+            reading_furigana = reading
+            furigana_status = "no match"
 
     # Create the notes section.
     expr_notes = format_speech_parts(sense_notes)
@@ -361,6 +381,14 @@ def fetch_word(user_input, jido_session):
         reading_furigana,
         expr_notes
     )
+
+    # Update Jisho and furigana statuses.
+    jido_card.jisho_status = ("success", "")
+
+    if furigana_status == "":
+        jido_card.status_furigana = ("success", "")
+    else:
+        jido_card.status_furigana = ("failure", furigana_status)
 
     return jido_card
 
@@ -445,6 +473,9 @@ def fetch_pitch_accent(jido_session, jido_card):
                     valid_input = True
             except ValueError:
                 pass
+        jido_card.status_pitch_accent = ("success", "manual")
+    else:
+        jido_card.status_pitch_accent = ("success", "")
 
     # Heiban
     if pitch_number == 0:
@@ -640,6 +671,7 @@ def fetch_sentences(jido_session, jido_card):
             # Check for color formatting.
             if ("<span" in jido_card.sentence_japanese
                     and "<span" in jido_card.sentence_english):
+                jido_card.status_sentence = ("success", "")
                 break
             else:
                 if i == 0:
@@ -652,6 +684,7 @@ def fetch_sentences(jido_session, jido_card):
                          "Failed to include <span> formatting in the generated"
                         f" sentence for {jido_card.user_input}. Continuing "
                          "with an unformated sentence.")
+                    jido_card.status_sentence = ("failed", "formatting")
         except (json.JSONDecodeError, KeyError):
             if i == 0:
                 print(
@@ -663,6 +696,7 @@ def fetch_sentences(jido_session, jido_card):
                     " Continuing without sentences.")
                 jido_card.sentence_japanese = ""
                 jido_card.sentence_english = ""
+                jido_card.status_sentence = ("failed", "none")
 
 
 def fetch_audio(jido_session, jido_card):
@@ -679,6 +713,8 @@ def fetch_audio(jido_session, jido_card):
             jido_card.audio = "[sound:" + jido_card.expr + "_expr.mp3]"
             jido_session.media_files.append(
                 "./output/audio/" + jido_card.expr + "_expr.mp3")
+            
+            jido_card.status_audio_expr = ("success", "")
             break
         except Exception:
             if i == 0:
@@ -690,6 +726,7 @@ def fetch_audio(jido_session, jido_card):
                     f"Failed to obtain expression audio for {jido_card.expr}. "
                     "Continuing without audio.")
                 jido_card.audio = ""
+                jido_card.status_audio_expr = ("failed", "")
 
     for i in range(2):
         try:
@@ -706,6 +743,8 @@ def fetch_audio(jido_session, jido_card):
                 "[sound:" + jido_card.expr + "_sentence.mp3]")
             jido_session.media_files.append(
                 "./output/audio/" + jido_card.expr + "_sentence.mp3")
+            
+            jido_card.status_audio_sentence = ("success", "")
             break
         except Exception:
             if i == 0:
@@ -717,6 +756,7 @@ def fetch_audio(jido_session, jido_card):
                     f"Failed to obtain sentence audio for {jido_card.expr}. "
                     "Continuing without audio.")
                 jido_card.audio_sentence = ""
+                jido_card.status_audio_sentence = ("failed", "")
 
 
 def import_csv(jido_session):
@@ -781,12 +821,15 @@ def process_word(user_input, jido_session):
         elif user_input[-2:] == "する":
             adjusted_user_input = user_input[:-2]
             jido_card = fetch_word(adjusted_user_input, jido_session)
+        # No match.
         else:
             print(f"No match found for {user_input}.")
+            jido_session.cards_failed.append((user_input, "no match"))
             return
     
     if jido_card == "Exception":
         print(f"Unable to retrieve data for {user_input}. Please try again.")
+        jido_session.card_failed.append((user_input, "error"))
         return
 
     # Retrieve pitch accent data.
