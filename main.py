@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 import azure.cognitiveservices.speech as speechsdk
 import re
 from pathlib import Path
+import requests
 
 
 class JidoSession:
@@ -139,6 +140,10 @@ def fetch_word(user_input, jido_session):
         data = Word.request(user_input).data
     except AttributeError:
         return None
+    except requests.exceptions.JSONDecodeError:
+        return "Exception"
+    except Exception:
+        return "Exception"
     # print(data)
 
     # Cycle through the data to find slug matches or 'usually kana' matches.
@@ -620,7 +625,7 @@ def fetch_sentences(jido_session, jido_card):
         for block in message.content:
             if block.type == "text":
                 message_content = block
-                print(block.text)
+                # print(block.text)
 
         try:
             sentence_data = json.loads(message_content.text)
@@ -779,6 +784,10 @@ def process_word(user_input, jido_session):
         else:
             print(f"No match found for {user_input}.")
             return
+    
+    if jido_card == "Exception":
+        print(f"Unable to retrieve data for {user_input}. Please try again.")
+        return
 
     # Retrieve pitch accent data.
     fetch_pitch_accent(jido_session, jido_card)
