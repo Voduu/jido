@@ -9,12 +9,16 @@ import azure.cognitiveservices.speech as speechsdk
 import re
 from pathlib import Path
 import requests
+import datetime
 
 
 class JidoSession:
     def __init__(self, deck_name):
         self.cards_log = []
+        self.cards_partial_failure = []
         self.cards_failed = []
+
+        self.deck_name = deck_name
 
         self.accents_by_expression = {}
         self.accents_by_reading = {}
@@ -360,14 +364,16 @@ def fetch_word(user_input, jido_session):
                 f"reading {reading}. Defaulting to {reading} without "
                  "furigana.")
             reading_furigana = reading
-            furigana_status = "mismatch"
+            furigana_status = "mismatched reading"
+            jido_session.cards_partial_failure.append(jido_card)
         # If a match is not found.
         else:
             print(
                 f"Furigana data not found for {user_input}. Defaulting to "
                 f"{reading} without furigana.")
             reading_furigana = reading
-            furigana_status = "no match"
+            furigana_status = "no data found"
+            jido_session.cards_partial_failure.append(jido_card)
 
     # Create the notes section.
     expr_notes = format_speech_parts(sense_notes)
@@ -383,7 +389,7 @@ def fetch_word(user_input, jido_session):
     )
 
     # Update Jisho and furigana statuses.
-    jido_card.jisho_status = ("success", "")
+    jido_card.status_jisho = ("success", "")
 
     if furigana_status == "":
         jido_card.status_furigana = ("success", "")
@@ -473,7 +479,8 @@ def fetch_pitch_accent(jido_session, jido_card):
                     valid_input = True
             except ValueError:
                 pass
-        jido_card.status_pitch_accent = ("success", "manual")
+        jido_card.status_pitch_accent = ("success", "manual entry")
+        jido_session.cards_partial_failure.append(jido_card)
     else:
         jido_card.status_pitch_accent = ("success", "")
 
@@ -685,6 +692,7 @@ def fetch_sentences(jido_session, jido_card):
                         f" sentence for {jido_card.user_input}. Continuing "
                          "with an unformated sentence.")
                     jido_card.status_sentence = ("failed", "formatting")
+                    jido_session.cards_partial_failure.append(jido_card)
         except (json.JSONDecodeError, KeyError):
             if i == 0:
                 print(
@@ -696,7 +704,8 @@ def fetch_sentences(jido_session, jido_card):
                     " Continuing without sentences.")
                 jido_card.sentence_japanese = ""
                 jido_card.sentence_english = ""
-                jido_card.status_sentence = ("failed", "none")
+                jido_card.status_sentence = ("failed", "failed to generate")
+                jido_session.cards_partial_failure.append(jido_card)
 
 
 def fetch_audio(jido_session, jido_card):
@@ -726,7 +735,8 @@ def fetch_audio(jido_session, jido_card):
                     f"Failed to obtain expression audio for {jido_card.expr}. "
                     "Continuing without audio.")
                 jido_card.audio = ""
-                jido_card.status_audio_expr = ("failed", "")
+                jido_card.status_audio_expr = ("failed", "failed to generate")
+                jido_session.cards_partial_failure.append(jido_card)
 
     for i in range(2):
         try:
@@ -756,7 +766,9 @@ def fetch_audio(jido_session, jido_card):
                     f"Failed to obtain sentence audio for {jido_card.expr}. "
                     "Continuing without audio.")
                 jido_card.audio_sentence = ""
-                jido_card.status_audio_sentence = ("failed", "")
+                jido_card.status_audio_sentence = (
+                    "failed", "failed to generate")
+                jido_session.cards_partial_failure.append(jido_card)
 
 
 def import_csv(jido_session):
@@ -824,12 +836,20 @@ def process_word(user_input, jido_session):
         # No match.
         else:
             print(f"No match found for {user_input}.")
-            jido_session.cards_failed.append((user_input, "no match"))
+
+            failed_card = Card(user_input, "", "", "", "", "")
+            failed_card.status_jisho = ("failed", "no match found")
+            jido_session.cards_failed.append(failed_card)
+            jido_session.card_log.append(failed_card)
             return
     
     if jido_card == "Exception":
         print(f"Unable to retrieve data for {user_input}. Please try again.")
-        jido_session.card_failed.append((user_input, "error"))
+
+        failed_card = Card(user_input, "", "", "", "", "")
+        failed_card.status_jisho = ("failed", "Jisho API error")
+        jido_session.card_failed.append(failed_card)
+        jido_session.card_log.append(failed_card)
         return
 
     # Retrieve pitch accent data.
@@ -843,6 +863,9 @@ def process_word(user_input, jido_session):
 
     # Create note.
     create_note(jido_session, jido_card)
+
+    # Add card to cards log.
+    jido_session.cards_log.append(jido_card)
 
 
 def create_note(jido_session, jido_card):
@@ -869,6 +892,157 @@ def export_deck(output_name, jido_session):
     jido_package = genanki.Package(jido_session.anki_deck)
     jido_package.media_files = jido_session.media_files
     jido_package.write_to_file("./output/packages/" + output_name + ".apkg")
+    export_datetime = datetime.datetime.now().strftime(
+        f"%Y-%m-%d %I:%M %p")
+
+    # Generate partially failed cards.
+    failure_string = ""
+    
+    for card in jido_session.cards_partial_failure:
+        need_comma = False
+        failure_string = (
+            failure_string + card.user_input 
+            + ": ")
+
+        # Furigana
+        if card.status_furigana[0] != "success":
+            failure_string = (
+                failure_string + f"furigana ({card.status_furigana[1]})")
+            need_comma = True
+
+        # Pitch Accent
+        if card.status_pitch_accent[0] != "success":
+            if need_comma:
+                failure_string = failure_string + ", "
+            
+            failure_string = (
+                failure_string + "pitch accent " 
+                f"({card.status_pitch_accent[1]})")
+            need_comma = True
+        
+        # Sentences
+        if card.status_sentence[0] != "success":
+            if need_comma:
+                failure_string = failure_string + ", "
+            
+            failure_string = (
+                failure_string + f"sentences ({card.status_sentence[1]})")
+            need_comma = True
+        
+        # Expression Audio
+        if card.status_audio_expr[0] != "success":
+            if need_comma:
+                failure_string = failure_string + ", "
+            
+            failure_string = (
+                failure_string + "expression audio "
+                f"({card.status_audio_expr[1]})")
+            need_comma = True
+        
+        # Sentence Audio
+        if card.status_audio_sentence[0] != "success":
+            if need_comma:
+                failure_string = failure_string + ", "
+            
+            failure_string = (
+                failure_string + "sentence audio "
+                f"({card.status_audio_sentence[1]})")
+            need_comma = True
+        
+        failure_string = failure_string + "\n"
+    
+    # Generate skipped cards.
+    skipped_string = ""
+
+    if len(jido_session.cards_failed) == 0:
+        skipped_string = ""
+    
+    for card in jido_session.cards_failed:
+        skipped_string = (
+            skipped_string + f"{card.user_input}: {card.status_jisho[1]}\n")
+        
+    # Generate detailed log.
+    detailed_log = ""
+    
+    for i in range(len(jido_session.cards_log)):
+        card = jido_session.cards_log[i]
+        detailed_log = detailed_log + f"{i + 1}. {card.user_input}\n"
+
+        # Jisho API 
+        if card.status_jisho[0] == "success":
+            detailed_log = detailed_log + "    ✓ Jisho lookup\n"
+        else:
+            detailed_log = (
+                detailed_log + f"    ✗ Jisho lookup ({card.status_jisho[1]})\n"
+                "    ✗ Furigana\n"
+                "    ✗ Pitch accent\n"
+                "    ✗ Sentence generation\n"
+                "    ✗ Expression audio\n"
+                "    ✗ Sentence audio\n")
+            
+            continue
+
+        # Furigana
+        if card.status_furigana[0] == "success":
+            detailed_log = detailed_log + "    ✓ Furigana\n"
+        else:
+            detailed_log = (
+                detailed_log + f"    ✗ Furigana ({card.status_furigana[1]})\n")
+        
+        # Pitch Accent
+        if card.status_pitch_accent[0] == "success":
+            detailed_log = detailed_log + "    ✓ Pitch accent\n"
+        else:
+            detailed_log = (
+                detailed_log + "    ✗ Pitch accent "
+                f"({card.status_pitch_accent[1]})\n")
+        
+        # Sentences
+        if card.status_sentence[0] == "success":
+            detailed_log = detailed_log + "    ✓ Sentence generation\n"
+        else:
+            detailed_log = (
+                detailed_log + "    ✗ Sentence generation "
+                f"({card.status_sentence[1]})\n")
+        
+        # Expression Audio
+        if card.status_audio_expr[0] == "success":
+            detailed_log = detailed_log + "    ✓ Expression audio\n"
+        else:
+            detailed_log = (
+                detailed_log + "    ✗ Expression audio "
+                f"({card.status_audio_expr[1]})\n")
+        
+        # Sentence Audio
+        if card.status_audio_sentence[0] == "success":
+            detailed_log = detailed_log + "    ✓ Sentence audio\n"
+        else:
+            detailed_log = (
+                detailed_log + "    ✗ Sentence audio "
+                f"({card.status_audio_sentence[1]})\n")
+
+    output_string = (
+        "=== Jido Import Log ===\n"
+        f"Deck: {jido_session.deck_name}\n"
+        f"Date: {export_datetime}\n"
+        f"Words processed: {len(jido_session.cards_log)}\n"
+        f"Fully successful: {(len(jido_session.cards_log)
+                              - (len(jido_session.cards_partial_failure)
+                                 + len(jido_session.cards_failed)))}\n"
+        f"Partial failures: {len(jido_session.cards_partial_failure)}\n"
+        f"{failure_string}"
+        f"Skipped: {len(jido_session.cards_failed)}\n"
+        f"{skipped_string}"
+        "\n\n"
+        "=== Detailed Log ===\n"\
+        f"{detailed_log}")
+        
+    # Save File
+    Path("./output/logs").mkdir(parents=True, exist_ok=True)
+    export_file_path = datetime.datetime.now().strftime(
+        f"./output/logs/%Y%m%d_%H%M_{output_name}.log")
+    with open(export_file_path, "w") as fp:
+        fp.write(output_string)
 
 
 def main():
