@@ -858,7 +858,7 @@ def process_word(user_input, jido_session):
         failed_card = Card(user_input, "", "", "", "", "")
         failed_card.status_jisho = ("failed", "Jisho API error")
         jido_session.card_failed.append(failed_card)
-        jido_session.card_log.append(failed_card)
+        jido_session.cards_log.append(failed_card)
         return
 
     # If no result, check if the word was entered as a する verb or な adj.
@@ -873,12 +873,12 @@ def process_word(user_input, jido_session):
             jido_card = fetch_word(adjusted_user_input, jido_session)
         # No match.
         else:
-            print(f"No match found for {user_input}.")
+            print(f"No match found for {user_input}.\n")
 
             failed_card = Card(user_input, "", "", "", "", "")
             failed_card.status_jisho = ("failed", "no match found")
             jido_session.cards_failed.append(failed_card)
-            jido_session.card_log.append(failed_card)
+            jido_session.cards_log.append(failed_card)
             return
 
     # Retrieve pitch accent data.
@@ -979,7 +979,7 @@ def export_deck(output_name, jido_session):
         skipped_string = ""
     
     for card in jido_session.cards_failed:
-        skipped_string += f"{card.user_input}: {card.status_jisho[1]}\n"
+        skipped_string += f"    ✗ {card.user_input}: {card.status_jisho[1]}\n"
         
     # Generate detailed log.
     detailed_log = ""
@@ -1097,7 +1097,8 @@ def main():
     
     # Create a furigana data dictionary.
     try:
-        with open("./data/furigana.json", encoding="utf-8-sig") as furigana_file:
+        with open(
+                "./data/furigana.json", encoding="utf-8-sig") as furigana_file:
             data = json.load(furigana_file)
 
             for entry in data:
