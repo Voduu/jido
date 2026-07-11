@@ -479,7 +479,7 @@ def fetch_pitch_accent(jido_session, jido_card):
                     valid_input = True
             except ValueError:
                 pass
-        jido_card.status_pitch_accent = ("success", "manual entry")
+        jido_card.status_pitch_accent = ("failed", "manual entry")
         jido_session.cards_partial_failure.append(jido_card)
     else:
         jido_card.status_pitch_accent = ("success", "")
@@ -900,9 +900,7 @@ def export_deck(output_name, jido_session):
     
     for card in jido_session.cards_partial_failure:
         need_comma = False
-        failure_string = (
-            failure_string + card.user_input 
-            + ": ")
+        failure_string = failure_string + "    ✗ " + card.user_input + ": "
 
         # Furigana
         if card.status_furigana[0] != "success":
