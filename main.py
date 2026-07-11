@@ -12,6 +12,10 @@ import requests
 import datetime
 
 
+class JishoAPIError(Exception):
+    pass
+
+
 class JidoSession:
     def __init__(self, deck_name):
         self.cards_log = []
@@ -21,7 +25,6 @@ class JidoSession:
         self.deck_name = deck_name
 
         self.accents_by_expression = {}
-        self.accents_by_reading = {}
         self.furigana_dataset = {}
         model_id = 1098463829
         deck_id = random.randrange(1 << 30, 1 << 31)
@@ -155,9 +158,9 @@ def fetch_word(user_input, jido_session):
     except AttributeError:
         return None
     except requests.exceptions.JSONDecodeError:
-        return "Exception"
+        raise JishoAPIError
     except Exception:
-        return "Exception"
+        raise JishoAPIError
     # print(data)
 
     # Cycle through the data to find slug matches or 'usually kana' matches.
@@ -165,7 +168,8 @@ def fetch_word(user_input, jido_session):
     k_matches = []
     s_matches = []
     for i in range(len(data)):
-        parsed_slug = "".join(c for c in data[i].slug if c not in "-0123456789")
+        parsed_slug = "".join(
+            c for c in data[i].slug if c not in "-0123456789")
 
         # If parsed slug matches, mark as slug match.
         if parsed_slug == user_input:
@@ -173,19 +177,22 @@ def fetch_word(user_input, jido_session):
             s_matches.append(i)
             continue
 
-        # If parsed slug does not match, check for reading match (rarely used kanji).
+        # If parsed slug does not match, check for reading match
+        # (rarely-used kanji).
         usually_kana_match = False
         for j in range(len(data[i].japanese)):
             if data[i].japanese[j].reading == user_input:
                 usually_kana_match = True
                 break
 
-        # If there is a reading match, check the tags to see if it is usually written in kana.
+        # If there is a reading match, check the tags to see if it is usually
+        # written in kana.
         if usually_kana_match:
             for j in range(len(data[i].senses)):
                 if len(data[i].senses[j].tags) == 0:
                     continue
-                if "Usually written using kana alone" in data[i].senses[j].tags:
+                if ("Usually written using kana alone"
+                        in data[i].senses[j].tags):
                     match_list[i] = "k"
                     k_matches.append(i)
                     break
@@ -212,7 +219,8 @@ def fetch_word(user_input, jido_session):
             slug_readings = []
             for j in range(len(data[s_matches[i]].japanese)):
                 if data[s_matches[i]].japanese[j].word == user_input:
-                    slug_readings.append(data[s_matches[i]].japanese[j].reading)
+                    slug_readings.append(
+                        data[s_matches[i]].japanese[j].reading)
 
             # Create string of readings.
             readings.append("\uff0f".join(slug_readings))
@@ -244,7 +252,9 @@ def fetch_word(user_input, jido_session):
         word_index = k_matches[0]
 
     # Check for multiple senses
-    senses_list = []  # The values are the actual indices of the senses, the index is the displayed number to the user.
+    # The values are the actual indices of the senses, the index is the 
+    # displayed number to the user.
+    senses_list = [] 
     sense_index = -1
 
     # If a WordConfig has already been selected.
@@ -286,9 +296,12 @@ def fetch_word(user_input, jido_session):
         else:
             sense_index = senses_list[0]
 
-    # If a WordConfig has not been selected ("usually kana" word matching to multiple WordConfigs)
+    # If a WordConfig has not been selected
+    # ("usually kana" word matching to multiple WordConfigs)
     else:
-        word_sense_index_tuple = []  # First number is the WordConfig index, second is sense index.
+        # First number is the WordConfig index, second is sense index.
+        word_sense_index_tuple = []
+
         for i in range(len(k_matches)):
             for j in range(len(data[k_matches[i]].senses)):
                 if ("Usually written using kana alone"
@@ -333,30 +346,30 @@ def fetch_word(user_input, jido_session):
     furigana_found = False
     expression_match = False
     if expression in jido_session.furigana_dataset:
-        result = jido_session.furigana_dataset[expression]
+        furigana_entries = jido_session.furigana_dataset[expression]
         reading_furigana = ""
         expression_match = True
 
-        for i in range(len(result)):
-            if result[i][0] == reading:
-                for j in range(len(result[i][1])):
-                    if "rt" in result[i][1][j]:
+        for i in range(len(furigana_entries)):
+            if furigana_entries[i][0] == reading:
+                for j in range(len(furigana_entries[i][1])):
+                    if "rt" in furigana_entries[i][1][j]:
                         # Add a space if the previous character is not a 
                         # bracket (or the string is not empty) for formatting.
-                        if reading_furigana != "" and reading_furigana[-1] != "]":
+                        if (reading_furigana != "" 
+                                and reading_furigana[-1] != "]"):
                             reading_furigana += " "
 
                         reading_furigana += (
-                            result[i][1][j]["ruby"] + "[" 
-                            + result[i][1][j]["rt"] + "]")
+                            furigana_entries[i][1][j]["ruby"] + "[" 
+                            + furigana_entries[i][1][j]["rt"] + "]")
                     else:
-                        reading_furigana += result[i][1][j]["ruby"]
+                        reading_furigana += furigana_entries[i][1][j]["ruby"]
                 furigana_found = True
                 break
 
     furigana_status = ""
     if not furigana_found:
-
         # If a match is found but no furigana (mismatched reading, etc.).
         if expression_match:
             print(
@@ -365,7 +378,6 @@ def fetch_word(user_input, jido_session):
                  "furigana.")
             reading_furigana = reading
             furigana_status = "mismatched reading"
-            jido_session.cards_partial_failure.append(jido_card)
         # If a match is not found.
         else:
             print(
@@ -373,7 +385,6 @@ def fetch_word(user_input, jido_session):
                 f"{reading} without furigana.")
             reading_furigana = reading
             furigana_status = "no data found"
-            jido_session.cards_partial_failure.append(jido_card)
 
     # Create the notes section.
     expr_notes = format_speech_parts(sense_notes)
@@ -395,6 +406,7 @@ def fetch_word(user_input, jido_session):
         jido_card.status_furigana = ("success", "")
     else:
         jido_card.status_furigana = ("failure", furigana_status)
+        jido_session.cards_partial_failure.append(jido_card)
 
     return jido_card
 
@@ -663,7 +675,6 @@ def fetch_sentences(jido_session, jido_card):
         for block in message.content:
             if block.type == "text":
                 message_content = block
-                # print(block.text)
 
         try:
             sentence_data = json.loads(message_content.text)
@@ -839,7 +850,16 @@ def import_csv(jido_session):
 def process_word(user_input, jido_session):
     print(f"=== {user_input} ===")
     # Retrieve Jisho data.
-    jido_card = fetch_word(user_input, jido_session)
+    try:
+        jido_card = fetch_word(user_input, jido_session)
+    except JishoAPIError:
+        print(f"Unable to retrieve data for {user_input}. Please try again.")
+
+        failed_card = Card(user_input, "", "", "", "", "")
+        failed_card.status_jisho = ("failed", "Jisho API error")
+        jido_session.card_failed.append(failed_card)
+        jido_session.card_log.append(failed_card)
+        return
 
     # If no result, check if the word was entered as a する verb or な adj.
     if jido_card is None:
@@ -860,15 +880,6 @@ def process_word(user_input, jido_session):
             jido_session.cards_failed.append(failed_card)
             jido_session.card_log.append(failed_card)
             return
-    
-    if jido_card == "Exception":
-        print(f"Unable to retrieve data for {user_input}. Please try again.")
-
-        failed_card = Card(user_input, "", "", "", "", "")
-        failed_card.status_jisho = ("failed", "Jisho API error")
-        jido_session.card_failed.append(failed_card)
-        jido_session.card_log.append(failed_card)
-        return
 
     # Retrieve pitch accent data.
     fetch_pitch_accent(jido_session, jido_card)
@@ -919,54 +930,47 @@ def export_deck(output_name, jido_session):
     
     for card in jido_session.cards_partial_failure:
         need_comma = False
-        failure_string = failure_string + "    ✗ " + card.user_input + ": "
+        failure_string += "    ✗ " + card.user_input + ": "
 
         # Furigana
         if card.status_furigana[0] != "success":
-            failure_string = (
-                failure_string + f"furigana ({card.status_furigana[1]})")
+            failure_string += f"furigana ({card.status_furigana[1]})"
             need_comma = True
 
         # Pitch Accent
         if card.status_pitch_accent[0] != "success":
             if need_comma:
-                failure_string = failure_string + ", "
+                failure_string += ", "
             
-            failure_string = (
-                failure_string + "pitch accent " 
-                f"({card.status_pitch_accent[1]})")
+            failure_string += f"pitch accent ({card.status_pitch_accent[1]})"
             need_comma = True
         
         # Sentences
         if card.status_sentence[0] != "success":
             if need_comma:
-                failure_string = failure_string + ", "
+                failure_string += ", "
             
-            failure_string = (
-                failure_string + f"sentences ({card.status_sentence[1]})")
+            failure_string += f"sentences ({card.status_sentence[1]})"
             need_comma = True
         
         # Expression Audio
         if card.status_audio_expr[0] != "success":
             if need_comma:
-                failure_string = failure_string + ", "
+                failure_string += ", "
             
-            failure_string = (
-                failure_string + "expression audio "
-                f"({card.status_audio_expr[1]})")
+            failure_string += f"expression audio ({card.status_audio_expr[1]})"
             need_comma = True
         
         # Sentence Audio
         if card.status_audio_sentence[0] != "success":
             if need_comma:
-                failure_string = failure_string + ", "
+                failure_string += ", "
             
-            failure_string = (
-                failure_string + "sentence audio "
-                f"({card.status_audio_sentence[1]})")
+            failure_string += (
+                f"sentence audio ({card.status_audio_sentence[1]})")
             need_comma = True
         
-        failure_string = failure_string + "\n"
+        failure_string += "\n"
     
     # Generate skipped cards.
     skipped_string = ""
@@ -975,22 +979,21 @@ def export_deck(output_name, jido_session):
         skipped_string = ""
     
     for card in jido_session.cards_failed:
-        skipped_string = (
-            skipped_string + f"{card.user_input}: {card.status_jisho[1]}\n")
+        skipped_string += f"{card.user_input}: {card.status_jisho[1]}\n"
         
     # Generate detailed log.
     detailed_log = ""
     
     for i in range(len(jido_session.cards_log)):
         card = jido_session.cards_log[i]
-        detailed_log = detailed_log + f"{i + 1}. {card.user_input}\n"
+        detailed_log += f"{i + 1}. {card.user_input}\n"
 
         # Jisho API 
         if card.status_jisho[0] == "success":
-            detailed_log = detailed_log + "    ✓ Jisho lookup\n"
+            detailed_log += "    ✓ Jisho lookup\n"
         else:
-            detailed_log = (
-                detailed_log + f"    ✗ Jisho lookup ({card.status_jisho[1]})\n"
+            detailed_log += (
+                f"    ✗ Jisho lookup ({card.status_jisho[1]})\n"
                 "    ✗ Furigana\n"
                 "    ✗ Pitch accent\n"
                 "    ✗ Sentence generation\n"
@@ -1001,42 +1004,37 @@ def export_deck(output_name, jido_session):
 
         # Furigana
         if card.status_furigana[0] == "success":
-            detailed_log = detailed_log + "    ✓ Furigana\n"
+            detailed_log += "    ✓ Furigana\n"
         else:
-            detailed_log = (
-                detailed_log + f"    ✗ Furigana ({card.status_furigana[1]})\n")
+            detailed_log += f"    ✗ Furigana ({card.status_furigana[1]})\n"
         
         # Pitch Accent
         if card.status_pitch_accent[0] == "success":
-            detailed_log = detailed_log + "    ✓ Pitch accent\n"
+            detailed_log += "    ✓ Pitch accent\n"
         else:
-            detailed_log = (
-                detailed_log + "    ✗ Pitch accent "
-                f"({card.status_pitch_accent[1]})\n")
+            detailed_log += (
+                f"    ✗ Pitch accent ({card.status_pitch_accent[1]})\n")
         
         # Sentences
         if card.status_sentence[0] == "success":
-            detailed_log = detailed_log + "    ✓ Sentence generation\n"
+            detailed_log += "    ✓ Sentence generation\n"
         else:
-            detailed_log = (
-                detailed_log + "    ✗ Sentence generation "
-                f"({card.status_sentence[1]})\n")
+            detailed_log += (
+                f"    ✗ Sentence generation ({card.status_sentence[1]})\n")
         
         # Expression Audio
         if card.status_audio_expr[0] == "success":
-            detailed_log = detailed_log + "    ✓ Expression audio\n"
+            detailed_log += "    ✓ Expression audio\n"
         else:
-            detailed_log = (
-                detailed_log + "    ✗ Expression audio "
-                f"({card.status_audio_expr[1]})\n")
+            detailed_log += (
+                f"    ✗ Expression audio ({card.status_audio_expr[1]})\n")
         
         # Sentence Audio
         if card.status_audio_sentence[0] == "success":
-            detailed_log = detailed_log + "    ✓ Sentence audio\n"
+            detailed_log += "    ✓ Sentence audio\n"
         else:
-            detailed_log = (
-                detailed_log + "    ✗ Sentence audio "
-                f"({card.status_audio_sentence[1]})\n")
+            detailed_log += (
+                f"    ✗ Sentence audio ({card.status_audio_sentence[1]})\n")
 
     output_string = (
         "=== Jido Import Log ===\n"
@@ -1093,13 +1091,6 @@ def main():
                 else:
                     jido_session.accents_by_expression[expression] = [
                         [reading, pitch_number.rstrip()]]
-                
-                if reading in jido_session.accents_by_reading:
-                    jido_session.accents_by_reading[reading].append(
-                        [expression, pitch_number.rstrip()])
-                else:
-                    jido_session.accents_by_reading[reading] = [
-                        [expression, pitch_number.rstrip()]]
     except FileNotFoundError:
         print("accents.txt not found.")
         return
@@ -1116,16 +1107,6 @@ def main():
                 else:
                     jido_session.furigana_dataset[entry["text"]] = [
                         [entry["reading"], entry["furigana"]]]
-
-
-            # for entry in data:
-            #     jido_session.furigana_dataset[entry["text"]] = [entry["reading"], entry["furigana"]]
-
-        # NOTE: Remove when finished with furigana.
-        # print("\n\nSuccessfully loaded furigana dataset.\n\n")
-        # while True:
-        #     user_input = input("Enter a word: ")
-        #     print(jido_session.furigana_dataset[user_input])
                  
     except FileNotFoundError:
         print("File \"./data/furigana.json\" not found.")
