@@ -775,7 +775,10 @@ def import_csv(jido_session):
     print(
         "\nPlease note that this process is not entirely automatic.\nIt may "
         "take some time to complete depending on the number of words in the "
-        "file and will likely require your input.\n")
+        "file and will likely require your input.\nYou will be given the "
+        "opportunity to stop early every 25 words. You can then export what "
+        "has been completed.\nYour position in the file will not be saved and "
+        "it will start from the beginning the next time.\n")
 
     # Prompt the user to place the file in the correct directory and identify
     # it.
@@ -815,9 +818,22 @@ def import_csv(jido_session):
         return
 
     print()
+    count = 0
     for word in word_list:
+        if count != 0 and count % 25 == 0:
+            user_input = "invalid"
+            while user_input.lower() not in ["y", "n", ""]:
+                user_input = input(
+                    f"{count} words have been processed. Would you like to "
+                    "continue? [Y/n] ")
+
+            print()
+            if user_input.lower() == "n":
+                break
+        
         if len(word.strip()) > 0:
             process_word(word, jido_session)
+        count += 1
 
     
 def process_word(user_input, jido_session):
