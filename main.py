@@ -773,9 +773,9 @@ def fetch_audio(jido_session, jido_card):
 
 def import_csv(jido_session):
     print(
-        "Please note that this process is not entirely automatic.\nIt may "
+        "\nPlease note that this process is not entirely automatic.\nIt may "
         "take some time to complete depending on the number of words in the "
-        "file and will likely require your input.")
+        "file and will likely require your input.\n")
 
     # Prompt the user to place the file in the correct directory and identify
     # it.
@@ -814,12 +814,14 @@ def import_csv(jido_session):
              "the ./input/ directory.")
         return
 
+    print()
     for word in word_list:
         if len(word.strip()) > 0:
             process_word(word, jido_session)
 
     
 def process_word(user_input, jido_session):
+    print(f"=== {user_input} ===")
     # Retrieve Jisho data.
     jido_card = fetch_word(user_input, jido_session)
 
@@ -886,6 +888,7 @@ def create_note(jido_session, jido_card):
     )
 
     jido_session.add_note(anki_note)
+    print()
 
 
 def export_deck(output_name, jido_session):
@@ -1133,6 +1136,7 @@ def main():
             import_csv(jido_session)
             continue
 
+        print()
         process_word(user_input, jido_session)
 
 
