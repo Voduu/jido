@@ -1,0 +1,83 @@
+Chapter 6
+
+Vocabulary:
+開ける (あける) [ru-v.] — to open (something)
+遊ぶ (あそぶ) [u-v.] — to play; to spend time pleasantly
+後で (あとで) [adv.] — later on
+急ぐ (いそぐ) [u-v.] — to hurry
+いつも [adv.] — always
+駅 (えき) [n.] — station
+お金 (おかね) [n.] — money
+教える (おしえる) [ru-v.] — to teach; to instruct
+降りる (おりる) [ru-v.] — to get off
+返す (かえす) [u-v.] — to return (a thing)
+角 (かど) [n.] — corner
+金 (かね) [n.] — money
+借りる (かりる) [ru-v.] — to borrow
+漢字 (かんじ) [n.] — kanji; Chinese character
+北 (きた) [n.] — north
+教科書 (きょうかしょ) [n.] — textbook
+国 (くに) [n.] — country; place of origin
+消す (けす) [u-v.] — to turn off; to erase
+結構です (けっこうです) [exp.] — That would be fine.; That wouldn’t be necessary.
+今週 (こんしゅう) [n.] — this week
+死ぬ (しぬ) [u-v.] — to die
+閉める (しめる) [ru-v.] — to close (something)
+信号 (しんごう) [n.] — traffic light
+すぐ [adv.] — right away
+座る (すわる) [u-v.] — to sit down
+大変 (たいへん) [な-adj.] — tough (situation)
+立つ (たつ) [u-v.] — to stand up
+たばこを吸う (たばこをすう) [u-v.] — to smoke
+使う (つかう) [u-v.] — to use
+次 (つぎ) [n.] — next
+つける [ru-v.] — to turn on
+連れてくる (つれてくる) [irr-v.] — to bring (a person)
+手伝う (てつだう) [u-v.] — to help
+出る (でる) [ru-v.] — to appear; to attend; to exit
+電気 (でんき) [n.] — electricity; light
+電車 (でんしゃ) [n.] — train
+電話する (でんわする) [irr-v.] — to call
+西 (にし) [n.] — west
+荷物 (にもつ) [n.] — baggage
+入る (はいる) [u-v.] — to enter
+東 (ひがし) [n.] — east
+左側 (ひだりがわ) [n.] — left side
+一つ目 (ひとつめ) [n.] — first
+二つ目 (ふたつめ) [n.] — second
+本当ですか (ほんとうですか) [exp.] — Really?
+曲がる (まがる) [u-v.] — to turn (right/left)
+まっすぐ [adv.] — straight
+窓 (まど) [n.] — window
+右側 (みぎがわ) [n.] — right side
+三つ目 (みっつめ) [n.] — third
+皆さん (みなさん) [n.] — everyone; all of you
+南 (みなみ) [n.] — south
+持ってくる (もってくる) [irr-v.] — to bring (a thing)
+持つ (もつ) [u-v.] — to carry; to hold
+休む (やすむ) [u-v.] — to be absent (from); to rest
+ゆっくり [adv.] — slowly; leisurely; unhurriedly
+夜 (よる) [n.] — night
+来週 (らいしゅう) [n.] — next week
+来年 (らいねん) [n.] — next year
+料理 (りょうり) [n.] — cooking; dish
+忘れる (わすれる) [ru-v.] — to forget; to leave behind
+渡る (わたる) [u-v.] — to cross
+イタリア [n.] — Italy
+エアコン [n.] — air conditioner
+シェフ [n.] — chef
+シャワー [n.] — shower
+シャワーを浴びる (シャワーをあびる) [ru-v.] — to take a shower
+パソコン [n.] — personal computer
+ピザ [n.] — pizza
+ページ [n.] — page
+ワイン [n.] — wine
+
+Grammar:
+て-form conjugation (all verb types: る-verbs, う-verbs by ending, irregular)
+～てください (please do...)
+Describing two activities (て-form + second clause)
+～てもいいです (may/it's okay to...)
+～てはいけません (must not...)
+～から (because; so — sentence ending)
+～ましょうか (shall I/we...?)

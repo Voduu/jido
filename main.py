@@ -17,7 +17,7 @@ class JishoAPIError(Exception):
 
 
 class JidoSession:
-    def __init__(self, deck_name):
+    def __init__(self, deck_name, study_category, study_level):
         self.cards_log = []
         self.cards_partial_failure = []
         self.cards_failed = []
@@ -30,6 +30,10 @@ class JidoSession:
         deck_id = random.randrange(1 << 30, 1 << 31)
 
         # Sentence generation variables
+        self.study_category = study_category
+        self.study_level = study_level
+        self.client_system_prompt = self.load_system_prompt()
+
         load_dotenv()
         self.client = anthropic.Anthropic(
             api_key=os.getenv("CLAUDE_CONSOLE_KEY"))
@@ -65,12 +69,12 @@ class JidoSession:
                 {
                     "name": "Card 1",
                     "qfmt": self.load_text_file(
-                        "./data/card1_front.html",
+                        "./data/templates/card1_front.html",
                         "Unable to load Card 1 Front HTML data. Reverting "
                         "to default.",
                         "{{Expression}}"),
                     "afmt": self.load_text_file(
-                        "./data/card1_back.html",
+                        "./data/templates/card1_back.html",
                         "Unable to load Card 1 Back HTML data. Reverting "
                         "to default.",
                         "{{Expression}}<hr>{{Reading}}<hr>{{Meaning}}<br>"
@@ -80,12 +84,12 @@ class JidoSession:
                 {
                     "name": "Card 2",
                     "qfmt": self.load_text_file(
-                        "./data/card2_front.html",
+                        "./data/templates/card2_front.html",
                         "Unable to load Card 2 Front HTML data. Reverting "
                         "to default.",
                         "{{Audio}} {{Sentence Audio}}"),
                     "afmt": self.load_text_file(
-                        "./data/card2_back.html",
+                        "./data/templates/card2_back.html",
                         "Unable to load Card 2 Back HTML data. Reverting "
                         "to default.",
                         "{{Expression}}<hr>{{Reading}}<hr>{{Meaning}}<br>"
@@ -94,7 +98,7 @@ class JidoSession:
                 },
             ],
             css=self.load_text_file(
-                "./data/model_css.txt",
+                "./data/templates/model_css.txt",
                 "No CSS file found. Continuing without.")
         )
 
@@ -102,8 +106,6 @@ class JidoSession:
             deck_id,
             deck_name
         )
-
-        self.load_system_prompt()
 
     def add_note(self, anki_note):
         self.anki_deck.add_note(anki_note)
@@ -117,12 +119,36 @@ class JidoSession:
             return default
 
     def load_system_prompt(self):
+        system_prompt_parts = []
         try:
             with open("./data/system_prompt.txt") as fp:
-                self.client_system_prompt = fp.read()
+                system_prompt_parts.append(fp.read())
         except FileNotFoundError:
             self.client_system_prompt = None
             print("ERROR: Failed to load Anthropic client system prompt.")
+            return
+
+        if self.study_category.lower() == "jlpt":
+            system_prompt_parts.append(
+                "Study Category: JLPT; Study Level: "
+                f"{self.study_level.upper()}")
+        elif self.study_category.lower() == "genki":
+            system_prompt_parts.append(
+                "Study Category: Genki; Study Level: Chapter "
+                f"{self.study_level}")
+            
+            for i in range(1, int(self.study_level) + 1):
+                if i < 10:
+                    system_prompt_parts.append(self.load_text_file(
+                        f"./data/levels/genki/genki_ch0{i}.txt",
+                        f"Error: Failed to load genki_ch0{i}.txt file."))
+                else:
+                    system_prompt_parts.append(self.load_text_file(
+                        f"./data/levels/genki/genki_ch{i}.txt",
+                        f"Error: Failed to load genki_ch{i}.txt file."))
+        
+        # print("\n".join(system_prompt_parts))
+        return "\n".join(system_prompt_parts)
     
 
 class Card:
@@ -658,12 +684,18 @@ def fetch_sentences(jido_session, jido_card):
     for i in range(2):
         content_message = (
             f"Expression: {jido_card.user_input}; Meaning: "
-            f"{jido_card.expr_meaning}; Level: JLPT N4; Pitch Formatting Number: "
+            f"{jido_card.expr_meaning}; Pitch Formatting Number: "
             f"{jido_card.pitch_accent_type}")
         message = jido_session.client.messages.create(
             model="claude-haiku-4-5-20251001",
             max_tokens=1000,
-            system=jido_session.client_system_prompt,
+            system=[
+                {
+                    "type": "text",
+                    "text": jido_session.client_system_prompt,
+                    "cache_control": {"type": "ephemeral"},
+                }
+            ],
             messages=[
                 {
                     "role": "user",
@@ -672,12 +704,10 @@ def fetch_sentences(jido_session, jido_card):
             ]
         )
 
-        for block in message.content:
-            if block.type == "text":
-                message_content = block
-
         try:
-            sentence_data = json.loads(message_content.text)
+            clean_message_content = re.sub(
+                "(```json|```|)", "", message.content[0].text).strip()
+            sentence_data = json.loads(clean_message_content)
 
             jido_card.sentence_japanese = sentence_data["japanese"]
             jido_card.sentence_english = sentence_data["english"]
@@ -1064,6 +1094,7 @@ def main():
     deck_name = ""
     output_name = ""
     valid_output_name = False
+    valid_study_level = False
 
     while deck_name == "":
         deck_name = input("Enter your deck name: ")
@@ -1076,7 +1107,34 @@ def main():
         if len(output_name) > 0:
             valid_output_name = True
     
-    jido_session = JidoSession(deck_name)
+    while not valid_study_level:
+        study_category = input(
+            "For sentence generation purposes, please enter your study system "
+            "(JLPT, Genki): ")
+        if study_category.lower() not in ["jlpt", "genki"]:
+            continue
+
+        if study_category.lower() == "jlpt":
+            study_level = input(
+                "Please enter your level (N5, N4, N3, N2, N1): ")
+            if study_level.lower() not in ["n5", "n4", "n3", "n2", "n1"]:
+                continue
+            else:
+                valid_study_level = True
+        elif study_category.lower() == "genki":
+            study_level = input(
+                "Please enter your chapter (1-23): ")
+            try:
+                study_level_int = int(study_level)
+            except ValueError:
+                continue
+
+            if study_level_int < 1 or study_level_int > 23:
+                continue
+            else:
+                valid_study_level = True
+    
+    jido_session = JidoSession(deck_name, study_category, study_level)
     # Create accent data dictionary
     try:
         with open("./data/accents.txt") as accents_file:
