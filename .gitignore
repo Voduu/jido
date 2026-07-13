@@ -1,5 +1,15 @@
-*.apkg
-*.env
-*.mp3
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# Virtual environment
+venv/
+
+# Environment variables
+.env
+
+# Project
 input/
 output/
