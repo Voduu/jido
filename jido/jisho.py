@@ -1,5 +1,4 @@
 import requests
-
 from jisho_api.word import Word
 
 from jido import Card
@@ -267,6 +266,7 @@ def fetch_word(user_input, jido_session):
         jido_session.cards_partial_failure.append(jido_card)
 
     return jido_card
+
 
 def format_speech_parts(sense_notes):
     note_entries = []

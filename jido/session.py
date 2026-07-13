@@ -1,9 +1,11 @@
+import os
+import random
+
 import anthropic
 import azure.cognitiveservices.speech as speechsdk
 from dotenv import load_dotenv
 import genanki
-import os
-import random
+
 
 class JidoSession:
     def __init__(self, deck_name, study_category, study_level):
@@ -136,5 +138,4 @@ class JidoSession:
                         f"./data/levels/genki/genki_ch{i}.txt",
                         f"Error: Failed to load genki_ch{i}.txt file."))
         
-        # print("\n".join(system_prompt_parts))
         return "\n".join(system_prompt_parts)

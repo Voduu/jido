@@ -3,6 +3,7 @@ from pathlib import Path
 
 import genanki
 
+
 def export_deck(output_name, jido_session):
     jido_package = genanki.Package(jido_session.anki_deck)
     jido_package.media_files = jido_session.media_files

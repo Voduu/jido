@@ -1,5 +1,6 @@
 import genanki
 
+
 class Card:
     def __init__(
             self, user_input, expr, expr_meaning, expr_reading,
@@ -24,6 +25,7 @@ class Card:
         self.status_sentence = None
         self.status_audio_expr = None
         self.status_audio_sentence = None
+
 
 def create_note(jido_session, jido_card):
     anki_note = genanki.Note(
