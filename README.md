@@ -28,7 +28,7 @@ This project is entirely usable in its current state but there are future improv
 
 ### Database integration
 
-The next phase of this project is the implementation of a SQLlite database to store every card created. Once stored, if another user were to lookup the exact same expression at the same user level, instead of querying each API and dataset, it will instead search the database to provide a faster (and cheaper) card.
+The next phase of this project is the implementation of a SQLite database to store every card created. Once stored, if another user were to lookup the exact same expression at the same user level, instead of querying each API and dataset, it will instead search the database to provide a faster (and cheaper) card.
 
 This is also a major preparation step to opening this project to public use.
 
