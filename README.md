@@ -14,7 +14,7 @@ This program is designed to automate the creation of Japanese Anki flashcards wi
 * Audio of the Japanese sentence
 * Additional notes and information
 
-Furthermore, two separate cards are created for each word: one in which the user is tested by the expression, and one where they are tested by the audio of the expression and Japanese sentence.
+Furthermore, two separate cards are created for each word: one in which the user is tested by the expression, and one where they are tested by the audio of both the expression and the Japanese sentence.
 
 ## Requirements
 
