@@ -11,6 +11,7 @@ venv/
 .env
 
 # Project
+.vscode/
 input/
 output/
 

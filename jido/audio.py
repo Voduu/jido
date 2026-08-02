@@ -1,5 +1,12 @@
+import hashlib
+
 import azure.cognitiveservices.speech as speechsdk
 
+
+def hash_data(source):
+    h = hashlib.sha1()
+    h.update(source.encode())
+    return h.hexdigest()
 
 def fetch_audio(jido_session, jido_card):
     for i in range(2):
@@ -9,12 +16,14 @@ def fetch_audio(jido_session, jido_card):
 
             expression_audio = audio_result.get()
             expression_stream = speechsdk.AudioDataStream(expression_audio)
+            hash_result = hash_data(
+                f"{jido_card.user_input}_{jido_card.expr_reading}")
+            expression_audio_file_name = "jido-" + hash_result + ".mp3"
             expression_audio_path = (
-                "./output/audio/" + jido_card.expr + "_expr.mp3")
+                "./output/audio/" + expression_audio_file_name)
             expression_stream.save_to_wav_file(expression_audio_path)
-            jido_card.audio = "[sound:" + jido_card.expr + "_expr.mp3]"
-            jido_session.media_files.append(
-                "./output/audio/" + jido_card.expr + "_expr.mp3")
+            jido_card.audio = "[sound:" + expression_audio_file_name + "]"
+            jido_session.media_files.append(expression_audio_path)
             
             jido_card.status_audio_expr = ("success", "")
             break
@@ -39,13 +48,14 @@ def fetch_audio(jido_session, jido_card):
 
             sentence_audio = audio_result.get()
             sentence_stream = speechsdk.AudioDataStream(sentence_audio)
+            hash_result = hash_data(jido_card.sentence_japanese_clean)
+            sentence_audio_file_name = "jido-" + hash_result + ".mp3"
             sentence_audio_path = (
-                "./output/audio/" + jido_card.expr + "_sentence.mp3")
+                "./output/audio/" + sentence_audio_file_name)
             sentence_stream.save_to_wav_file(sentence_audio_path)
             jido_card.audio_sentence = (
-                "[sound:" + jido_card.expr + "_sentence.mp3]")
-            jido_session.media_files.append(
-                "./output/audio/" + jido_card.expr + "_sentence.mp3")
+                "[sound:" + sentence_audio_file_name + "]")
+            jido_session.media_files.append(sentence_audio_path)
             
             jido_card.status_audio_sentence = ("success", "")
             break
