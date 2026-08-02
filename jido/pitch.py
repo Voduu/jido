@@ -34,7 +34,8 @@ def fetch_pitch_accent(jido_session, jido_card):
             except ValueError:
                 pass
         jido_card.status_pitch_accent = ("failed", "manual entry")
-        jido_session.cards_partial_failure.append(jido_card)
+        if jido_card not in jido_session.cards_partial_failure:
+            jido_session.cards_partial_failure.append(jido_card)
     else:
         jido_card.status_pitch_accent = ("success", "")
 

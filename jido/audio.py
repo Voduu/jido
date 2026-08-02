@@ -38,7 +38,9 @@ def fetch_audio(jido_session, jido_card):
                     "Continuing without audio.")
                 jido_card.audio = ""
                 jido_card.status_audio_expr = ("failed", "failed to generate")
-                jido_session.cards_partial_failure.append(jido_card)
+
+                if jido_card not in jido_session.cards_partial_failure:
+                    jido_session.cards_partial_failure.append(jido_card)
 
     for i in range(2):
         try:
@@ -71,4 +73,6 @@ def fetch_audio(jido_session, jido_card):
                 jido_card.audio_sentence = ""
                 jido_card.status_audio_sentence = (
                     "failed", "failed to generate")
-                jido_session.cards_partial_failure.append(jido_card)
+
+                if jido_card not in jido_session.cards_partial_failure:
+                    jido_session.cards_partial_failure.append(jido_card)

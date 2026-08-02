@@ -263,7 +263,8 @@ def fetch_word(user_input, jido_session):
         jido_card.status_furigana = ("success", "")
     else:
         jido_card.status_furigana = ("failure", furigana_status)
-        jido_session.cards_partial_failure.append(jido_card)
+        if jido_card not in jido_session.cards_partial_failure:
+            jido_session.cards_partial_failure.append(jido_card)
 
     return jido_card
 
