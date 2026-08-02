@@ -1,7 +1,7 @@
 import requests
 from jisho_api.word import Word
 
-from jido import Card
+from .card import Card
 
 
 class JishoAPIError(Exception):
@@ -199,7 +199,27 @@ def fetch_word(user_input, jido_session):
     else:
         reading = user_input
 
-    # Retrieve the furigana reading for the expression.
+    # Create the notes section.
+    expr_notes = format_speech_parts(sense_notes)
+
+    # Finally, create the card.
+    jido_card = Card(
+        user_input,
+        expression,
+        meaning,
+        reading,
+        expr_notes
+    )
+
+    # Update Jisho and furigana statuses.
+    jido_card.status_jisho = ("success", "")
+
+    return jido_card
+
+def fetch_furigana_data(jido_session, jido_card):
+    user_input = jido_card.user_input
+    expression = jido_card.expr
+    reading = jido_card.expr_reading
     furigana_found = False
     expression_match = False
     if expression in jido_session.furigana_dataset:
@@ -232,7 +252,7 @@ def fetch_word(user_input, jido_session):
             print(
                 f"Furigana data found for {user_input} but none matched the "
                 f"reading {reading}. Defaulting to {reading} without "
-                 "furigana.")
+                    "furigana.")
             reading_furigana = reading
             furigana_status = "mismatched reading"
         # If a match is not found.
@@ -243,30 +263,14 @@ def fetch_word(user_input, jido_session):
             reading_furigana = reading
             furigana_status = "no data found"
 
-    # Create the notes section.
-    expr_notes = format_speech_parts(sense_notes)
-
-    # Finally, create the card.
-    jido_card = Card(
-        user_input,
-        expression,
-        meaning,
-        reading,
-        reading_furigana,
-        expr_notes
-    )
-
-    # Update Jisho and furigana statuses.
-    jido_card.status_jisho = ("success", "")
-
     if furigana_status == "":
-        jido_card.status_furigana = ("success", "")
+            jido_card.status_furigana = ("success", "")
     else:
         jido_card.status_furigana = ("failure", furigana_status)
         if jido_card not in jido_session.cards_partial_failure:
             jido_session.cards_partial_failure.append(jido_card)
 
-    return jido_card
+    jido_card.expr_reading_furigana = reading_furigana
 
 
 def format_speech_parts(sense_notes):

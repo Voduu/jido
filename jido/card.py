@@ -3,13 +3,12 @@ import genanki
 
 class Card:
     def __init__(
-            self, user_input, expr, expr_meaning, expr_reading,
-            expr_reading_furigana, expr_notes):
+            self, user_input, expr, expr_meaning, expr_reading, expr_notes):
         self.user_input = user_input
         self.expr = expr
         self.expr_meaning = expr_meaning
         self.expr_reading = expr_reading
-        self.expr_reading_furigana = expr_reading_furigana
+        self.expr_reading_furigana = ""
         self.sentence_japanese = ""
         self.sentence_japanese_clean = ""
         self.sentence_english = ""
