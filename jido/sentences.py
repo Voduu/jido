@@ -54,7 +54,8 @@ def fetch_sentences(jido_session, jido_card):
                         f" sentence for {jido_card.user_input}. Continuing "
                          "with an unformated sentence.")
                     jido_card.status_sentence = ("failed", "formatting")
-                    jido_session.cards_partial_failure.append(jido_card)
+                    if jido_card not in jido_session.cards_partial_failure:
+                        jido_session.cards_partial_failure.append(jido_card)
         except (json.JSONDecodeError, KeyError):
             if i == 0:
                 print(
@@ -67,4 +68,5 @@ def fetch_sentences(jido_session, jido_card):
                 jido_card.sentence_japanese = ""
                 jido_card.sentence_english = ""
                 jido_card.status_sentence = ("failed", "failed to generate")
-                jido_session.cards_partial_failure.append(jido_card)
+                if jido_card not in jido_session.cards_partial_failure:
+                    jido_session.cards_partial_failure.append(jido_card)
