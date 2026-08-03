@@ -85,7 +85,7 @@ def process_word(user_input, jido_session):
     except JishoAPIError:
         print(f"Unable to retrieve data for {user_input}. Please try again.")
 
-        failed_card = Card(user_input, "", "", "", "", "")
+        failed_card = Card(user_input, "", "", "", "")
         failed_card.status_jisho = ("failed", "Jisho API error")
         jido_session.card_failed.append(failed_card)
         jido_session.cards_log.append(failed_card)
@@ -105,7 +105,7 @@ def process_word(user_input, jido_session):
         else:
             print(f"No match found for {user_input}.\n")
 
-            failed_card = Card(user_input, "", "", "", "", "")
+            failed_card = Card(user_input, "", "", "", "")
             failed_card.status_jisho = ("failed", "no match found")
             jido_session.cards_failed.append(failed_card)
             jido_session.cards_log.append(failed_card)
