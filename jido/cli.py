@@ -158,7 +158,6 @@ def process_word(user_input, jido_session):
         fetch_furigana_data(jido_session, jido_card)
 
         # Retrieve pitch accent data.
-        print(f"DEBUG: reading = '{jido_card.expr_reading}'")
         fetch_pitch_accent(jido_session, jido_card)
 
         # Retrieve sentence data.

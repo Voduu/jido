@@ -82,6 +82,9 @@ def fetch_word(user_input):
             slug_readings = []
             for j in range(len(data[s_matches[i]]["japanese"])):
                 if "word" not in data[s_matches[i]]["japanese"][j]:
+                    if data[s_matches[i]]["japanese"][j]["reading"] == user_input:
+                        slug_readings.append(
+                            data[s_matches[i]]["japanese"][j]["reading"])
                     continue
                 if data[s_matches[i]]["japanese"][j]["word"] == user_input:
                     if "reading" not in data[s_matches[i]]["japanese"][j]:
