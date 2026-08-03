@@ -26,9 +26,15 @@ def fetch_pitch_accent(jido_session, jido_card):
         valid_input = False
         while not valid_input:
             try:
+                print(
+                    "No local pitch accent data found for "
+                    f"{jido_card.user_input}.")
+                print(
+                    "You can look up the downstep position at online resources"
+                    " such as OJAD: https://www.gavo.t.u-tokyo.ac.jp/ojad/")
                 pitch_number = int(input(
-                    "No pitch accent data found. Please enter the downstep "
-                    f"position for {jido_card.user_input}: "))
+                    "Please enter the downstep position for "
+                    f"{jido_card.user_input}: "))
                 if 0 <= pitch_number <= mora_length:
                     valid_input = True
             except ValueError:
