@@ -96,11 +96,11 @@ def process_word(user_input, jido_session):
         # な adjective
         if user_input[-1] == "な":
             adjusted_user_input = user_input[:-1]
-            jido_card = fetch_word(adjusted_user_input, jido_session)
+            jido_card = fetch_word(adjusted_user_input)
         # する verb
         elif user_input[-2:] == "する":
             adjusted_user_input = user_input[:-2]
-            jido_card = fetch_word(adjusted_user_input, jido_session)
+            jido_card = fetch_word(adjusted_user_input)
         # No match.
         else:
             print(f"No match found for {user_input}.\n")
