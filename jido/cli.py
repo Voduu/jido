@@ -81,7 +81,7 @@ def process_word(user_input, jido_session):
     print(f"=== {user_input} ===")
     # Retrieve Jisho data.
     try:
-        jido_card = fetch_word(user_input, jido_session)
+        jido_card = fetch_word(user_input)
     except JishoAPIError:
         print(f"Unable to retrieve data for {user_input}. Please try again.")
 
