@@ -72,13 +72,15 @@ def export_deck(output_name, jido_session):
     
     for i in range(len(jido_session.cards_log)):
         card = jido_session.cards_log[i]
-        detailed_log += f"{i + 1}. {card.user_input}\n"
+        detailed_log += f"{i + 1}. {card.user_input}"
 
         # Jisho API 
         if card.status_jisho[0] == "success":
+            detailed_log += ": " + card.expr_meaning + "\n"
             detailed_log += "    ✓ Jisho lookup\n"
         else:
             detailed_log += (
+                "\n"
                 f"    ✗ Jisho lookup ({card.status_jisho[1]})\n"
                 "    ✗ Furigana\n"
                 "    ✗ Pitch accent\n"
