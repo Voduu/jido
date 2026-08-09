@@ -126,13 +126,14 @@ class JidoSession:
         elif self.study_category.lower() in ["genki", "quartet"]:
             system_prompt_parts.append(
                 self.load_study_level(self.study_category, self.study_level))
-            
+
+        print(system_prompt_parts)
         return "\n".join(system_prompt_parts)
 
     def load_study_level(self, study_category, study_level):
         system_prompt_parts = []
         system_prompt_parts.append(
-            f"Study Category: {study_category}; Study Level: Chapter"
+            f"Study Category: {study_category}; Study Level: Chapter "
             f"{study_level}")
 
         if int(study_level) >= 5:
