@@ -24,7 +24,7 @@ Furthermore, two separate cards are created for each word: one in which the user
 
 ## Features
 
-* Study level selection (currently JLPT N5 thru N1) for sentence generation difficulty
+* Study level selection (currently JLPT N5, Genki, Quartet) for sentence generation difficulty
 * Batch CSV import with session checkpoints
 * Automatic する and な suffix stripping for verb and adjective input
 * Kana input normalization: words usually written in kana (i.e., ありがとう) but that have rarely-used kanji forms (i.e., 有り難う) are correctly resolved
@@ -35,17 +35,21 @@ Furthermore, two separate cards are created for each word: one in which the user
 
 This project is entirely usable in its current state but there are future improvements planned, including but not limited to the following:
 
-### Server deployment
+### Concurrency
 
-The next phase of this project is the deployment to a self-hosted server, making the database cache accessible beyond a single local machine and laying the groundwork for eventual public access, as mentioned in the current long-term goal below.
+The next update will incorporate concurrency where possible to allow either multiple parts of a card to be generated simultaneously or potentially multiple cards in order to decrease the amount of time required even further.
 
 ### Subtitle and text import via NLP
 
 A future phase of this project is the addition of a morphological analysis of text files (i.e., subtitle files). This would allow a user to upload a text file and select a percentage of words (i.e., top 85%), and the program would analyze the file and determine that percentage of the most common words excluding particles, auxiliary verbs, etc. It would then use surrounding context to determine the meanings of each word and generate an Anki deck containing those words.
 
+### Browser integration
+
+A potential future feature is a lightweight browser extension allowing users to look up Japanese words while browsing and send them directly into Jido's pipeline for card creation. 
+
 ### Proper CLI interface and website
 
-The long-term goal with this project is to open it to public use through a proper CLI interface and eventually a web application.
+Jido is currently deployed on a self-hosted home server only accessible locally. The long-term goal is to open it to public use through a proper CLI interface and eventually a web application, which will require addressing authentication and network security first.
 
 ## Known issues
 
