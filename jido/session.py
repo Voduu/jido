@@ -123,19 +123,31 @@ class JidoSession:
             system_prompt_parts.append(
                 "Study Category: JLPT; Study Level: "
                 f"{self.study_level.upper()}")
-        elif self.study_category.lower() == "genki":
+        elif self.study_category.lower() in ["genki", "quartet"]:
             system_prompt_parts.append(
-                "Study Category: Genki; Study Level: Chapter "
-                f"{self.study_level}")
+                self.load_study_level(self.study_category, self.study_level))
             
-            for i in range(1, int(self.study_level) + 1):
-                if i < 10:
-                    system_prompt_parts.append(self.load_text_file(
-                        f"./data/levels/genki/genki_ch0{i}.txt",
-                        f"Error: Failed to load genki_ch0{i}.txt file."))
-                else:
-                    system_prompt_parts.append(self.load_text_file(
-                        f"./data/levels/genki/genki_ch{i}.txt",
-                        f"Error: Failed to load genki_ch{i}.txt file."))
-        
+        return "\n".join(system_prompt_parts)
+
+    def load_study_level(self, study_category, study_level):
+        system_prompt_parts = []
+        system_prompt_parts.append(
+            f"Study Category: {study_category}; Study Level: Chapter"
+            f"{study_level}")
+
+        if int(study_level) >= 5:
+            study_level_lower_range = int(study_level) - 4
+        else:
+            study_level_lower_range = 1
+
+        study_category = study_category.lower()
+        for i in range(study_level_lower_range, int(study_level) + 1):
+            chapter = f"{i:02d}"
+            system_prompt_parts.append(
+                self.load_text_file(
+                    f"./data/levels/{study_category}/"
+                    f"{study_category}_ch{chapter}.txt",
+                    f"Error: Failed to load {study_category}_ch{chapter}.txt "
+                    f"file."))
+
         return "\n".join(system_prompt_parts)
