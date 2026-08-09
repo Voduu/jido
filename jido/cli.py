@@ -236,8 +236,8 @@ def main():
     while not valid_study_level:
         study_category = input(
             "For sentence generation purposes, please enter your study system "
-            "(JLPT, Genki): ")
-        if study_category.lower() not in ["jlpt", "genki"]:
+            "(JLPT, Genki, Quartet): ")
+        if study_category.lower() not in ["jlpt", "genki", "quartet"]:
             continue
 
         if study_category.lower() == "jlpt":
@@ -259,6 +259,19 @@ def main():
                 continue
 
             if study_level_int < 1 or study_level_int > 23:
+                continue
+            else:
+                valid_study_level = True
+        elif study_category.lower() == "quartet":
+            study_category = "Genki"
+            study_level = input(
+                "Please enter your chapter (1-12): ")
+            try:
+                study_level_int = int(study_level)
+            except ValueError:
+                continue
+
+            if study_level_int < 1 or study_level_int > 12:
                 continue
             else:
                 valid_study_level = True
