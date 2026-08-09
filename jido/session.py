@@ -1,3 +1,4 @@
+import hashlib
 import os
 import random
 
@@ -18,7 +19,8 @@ class JidoSession:
         self.accents_by_expression = {}
         self.furigana_dataset = {}
         model_id = 1098463829
-        deck_id = random.randrange(1 << 30, 1 << 31)
+        deck_id = int(
+            hashlib.sha1(deck_name.encode()).hexdigest(), 16) % (1 << 31)
 
         # Sentence generation variables
         self.study_category = study_category
@@ -127,7 +129,6 @@ class JidoSession:
             system_prompt_parts.append(
                 self.load_study_level(self.study_category, self.study_level))
 
-        print(system_prompt_parts)
         return "\n".join(system_prompt_parts)
 
     def load_study_level(self, study_category, study_level):
