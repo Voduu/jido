@@ -24,7 +24,7 @@ Furthermore, two separate cards are created for each word: one in which the user
 
 ## Features
 
-* Study level selection (currently JLPT N5, Genki, Quartet) for sentence generation difficulty
+* Study level selection (currently JLPT, Genki, Quartet) for sentence generation difficulty
 * Batch CSV import with session checkpoints
 * Automatic する and な suffix stripping for verb and adjective input
 * Kana input normalization: words usually written in kana (i.e., ありがとう) but that have rarely-used kanji forms (i.e., 有り難う) are correctly resolved
