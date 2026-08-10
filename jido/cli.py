@@ -92,7 +92,9 @@ def process_word(user_input, jido_session):
         jido_session.cards_log.append(jido_card)
     # If data not loaded from database, enter the pipeline.
     else:
-        generate_card(jido_session, jido_card)
+        jido_session.pending_futures.append(
+            jido_session.executor.submit(
+                generate_card, jido_session, jido_card))
 
 
 def resolve_word(user_input, jido_session):

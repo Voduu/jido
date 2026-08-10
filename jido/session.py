@@ -1,6 +1,6 @@
+from concurrent.futures import ThreadPoolExecutor
 import hashlib
 import os
-import random
 
 import anthropic
 import azure.cognitiveservices.speech as speechsdk
@@ -10,6 +10,9 @@ import genanki
 
 class JidoSession:
     def __init__(self, deck_name, study_category, study_level):
+        self.executor = ThreadPoolExecutor(max_workers=5)
+        self.pending_futures = []
+
         self.cards_log = []
         self.cards_partial_failure = []
         self.cards_failed = []
