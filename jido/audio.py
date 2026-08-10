@@ -29,13 +29,14 @@ def fetch_audio(jido_session, jido_card):
             break
         except Exception:
             if i == 0:
-                print(
-                    f"Error obtaining expression audio for {jido_card.expr}. "
-                    "Retrying once...")
+                pass
+                # print(
+                #     f"Error obtaining expression audio for {jido_card.expr}. "
+                #     "Retrying once...")
             else:
-                print(
-                    f"Failed to obtain expression audio for {jido_card.expr}. "
-                    "Continuing without audio.")
+                # print(
+                #     f"Failed to obtain expression audio for {jido_card.expr}. "
+                #     "Continuing without audio.")
                 jido_card.audio = ""
                 jido_card.status_audio_expr = ("failed", "failed to generate")
 
@@ -63,13 +64,14 @@ def fetch_audio(jido_session, jido_card):
             break
         except Exception:
             if i == 0:
-                print(
-                    f"Error obtaining sentence audio for {jido_card.expr}. "
-                    "Retrying once...")
+                pass
+                # print(
+                #     f"Error obtaining sentence audio for {jido_card.expr}. "
+                #     "Retrying once...")
             else:
-                print(
-                    f"Failed to obtain sentence audio for {jido_card.expr}. "
-                    "Continuing without audio.")
+                # print(
+                #     f"Failed to obtain sentence audio for {jido_card.expr}. "
+                #     "Continuing without audio.")
                 jido_card.audio_sentence = ""
                 jido_card.status_audio_sentence = (
                     "failed", "failed to generate")

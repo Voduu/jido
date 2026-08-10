@@ -262,17 +262,17 @@ def fetch_furigana_data(jido_session, jido_card):
     if not furigana_found:
         # If a match is found but no furigana (mismatched reading, etc.).
         if expression_match:
-            print(
-                f"Furigana data found for {user_input} but none matched the "
-                f"reading {reading}. Defaulting to {reading} without "
-                    "furigana.")
+            # print(
+            #     f"Furigana data found for {user_input} but none matched the "
+            #     f"reading {reading}. Defaulting to {reading} without "
+            #         "furigana.")
             reading_furigana = reading
             furigana_status = "mismatched reading"
         # If a match is not found.
         else:
-            print(
-                f"Furigana data not found for {user_input}. Defaulting to "
-                f"{reading} without furigana.")
+            # print(
+            #     f"Furigana data not found for {user_input}. Defaulting to "
+            #     f"{reading} without furigana.")
             reading_furigana = reading
             furigana_status = "no data found"
 

@@ -58,7 +58,7 @@ def import_csv(jido_session):
              "the ./input/ directory.")
         return
 
-    print()
+    # print()
     count = 0
     for word in word_list:
         if count != 0 and count % 25 == 0:
@@ -98,7 +98,7 @@ def process_word(user_input, jido_session):
 
 
 def resolve_word(user_input, jido_session):
-    print(f"=== {user_input} ===")
+    print(f"\n=== {user_input} ===")
     # Retrieve Jisho data.
     try:
         jido_card = fetch_word(user_input)
@@ -221,18 +221,20 @@ def generate_card(jido_session, jido_card):
             response = requests.post(
                 "http://127.0.0.1:8000/data", json=card)
 
-            if response.status_code == 200:
-                print("Card successfully added to database.")
-            elif response.status_code == 422:
-                print("Database validation error. Card not uploaded.")
-            else:
-                print(
-                    f"Database error {response.status_code}. "
-                    "Card not uploaded.")
+            # if response.status_code == 200:
+            #     print("Card successfully added to database.")
+            # elif response.status_code == 422:
+            #     print("Database validation error. Card not uploaded.")
+            # else:
+            #     print(
+            #         f"Database error {response.status_code}. "
+            #         "Card not uploaded.")
         except requests.exceptions.ConnectionError:
-            print("Database offline. Card not uploaded.")
+            pass
+            # print("Database offline. Card not uploaded.")
         except Exception as e:
-            print(f"Database error. Card not uploaded. {e}.")
+            pass
+            # print(f"Database error. Card not uploaded. {e}.")
             
     
     # Create note.

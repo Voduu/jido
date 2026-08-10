@@ -44,27 +44,29 @@ def fetch_sentences(jido_session, jido_card):
                 break
             else:
                 if i == 0:
-                    print(
-                         "Error including <span> formatting in the generated"
-                        f" sentence for {jido_card.user_input}. Retrying once"
-                         "...")
+                    pass
+                    # print(
+                    #      "Error including <span> formatting in the generated"
+                    #     f" sentence for {jido_card.user_input}. Retrying once"
+                    #      "...")
                 else:
-                    print(
-                         "Failed to include <span> formatting in the generated"
-                        f" sentence for {jido_card.user_input}. Continuing "
-                         "with an unformated sentence.")
+                    # print(
+                    #      "Failed to include <span> formatting in the generated"
+                    #     f" sentence for {jido_card.user_input}. Continuing "
+                    #      "with an unformated sentence.")
                     jido_card.status_sentence = ("failed", "formatting")
                     if jido_card not in jido_session.cards_partial_failure:
                         jido_session.cards_partial_failure.append(jido_card)
         except (json.JSONDecodeError, KeyError):
             if i == 0:
-                print(
-                    f"Error generating sentences for {jido_card.user_input}. "
-                        "Retrying once...")
+                pass
+                # print(
+                #     f"Error generating sentences for {jido_card.user_input}. "
+                #         "Retrying once...")
             else:
-                print(
-                    f"Failed to generate sentences for {jido_card.user_input}."
-                    " Continuing without sentences.")
+                # print(
+                #     f"Failed to generate sentences for {jido_card.user_input}."
+                #     " Continuing without sentences.")
                 jido_card.sentence_japanese = ""
                 jido_card.sentence_english = ""
                 jido_card.status_sentence = ("failed", "failed to generate")
