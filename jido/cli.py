@@ -78,6 +78,24 @@ def import_csv(jido_session):
 
     
 def process_word(user_input, jido_session):
+    jido_card, status = resolve_word(user_input, jido_session)
+
+    # If no card was created, exit.
+    if status == "failed":
+        return
+    # If data loaded from database.
+    elif status == "fetched from database":
+        # Create note.
+        create_note(jido_session, jido_card)
+    
+        # Add card to cards log.
+        jido_session.cards_log.append(jido_card)
+    # If data not loaded from database, enter the pipeline.
+    else:
+        generate_card(jido_session, jido_card)
+
+
+def resolve_word(user_input, jido_session):
     print(f"=== {user_input} ===")
     # Retrieve Jisho data.
     try:
@@ -89,7 +107,7 @@ def process_word(user_input, jido_session):
         failed_card.status_jisho = ("failed", "Jisho API error")
         jido_session.card_failed.append(failed_card)
         jido_session.cards_log.append(failed_card)
-        return
+        return (failed_card, "failed")
 
     # If no result, check if the word was entered as a する verb or な adj.
     if jido_card is None:
@@ -109,9 +127,10 @@ def process_word(user_input, jido_session):
             failed_card.status_jisho = ("failed", "no match found")
             jido_session.cards_failed.append(failed_card)
             jido_session.cards_log.append(failed_card)
-            return
+            return (failed_card, "failed")
 
     # Check if the card already exists in the database.
+    fetched_from_database = False
     try:
         card = {
             "user_input": jido_card.user_input,
@@ -125,7 +144,6 @@ def process_word(user_input, jido_session):
         data = response.json()
 
         # If it does exist, pull data from database.
-        fetched_from_database = False
         if data is not None:
             print("Data found in the database. Loading...")
             jido_card.expr_reading_furigana = data["reading_furigana"]
@@ -146,6 +164,8 @@ def process_word(user_input, jido_session):
                 "./output/audio/" + data["audio_sentence"])
             fetched_from_database = True
             print("Successfully loaded data from the database.")
+
+            return (jido_card, "fetched from database")
     except requests.exceptions.ConnectionError:
         print("Database offline. Querying...")
     except Exception as e:
@@ -154,59 +174,63 @@ def process_word(user_input, jido_session):
 
     # If data not loaded from database, enter the pipeline.
     if not fetched_from_database:
-        # Fetch furigana data.
-        fetch_furigana_data(jido_session, jido_card)
-
         # Retrieve pitch accent data.
         fetch_pitch_accent(jido_session, jido_card)
 
-        # Retrieve sentence data.
-        fetch_sentences(jido_session, jido_card)
+    return (jido_card, "not fetched from database")
 
-        # Retrieve audio data.
-        fetch_audio(jido_session, jido_card)
 
-        # Add card to database.
-        if (
-                jido_card.status_jisho[0] == "success"
-                and jido_card.status_sentence[0] == "success"
-                and jido_card.status_audio_expr[0] == "success"
-                and jido_card.status_audio_sentence[0] == "success"):
+def generate_card(jido_session, jido_card):
+    # Fetch furigana data.
+    fetch_furigana_data(jido_session, jido_card)
 
-            try:
-                card = {
-                    "user_input": jido_card.user_input,
-                    "expr": jido_card.expr,
-                    "reading": jido_card.expr_reading,
-                    "reading_furigana": jido_card.expr_reading_furigana,
-                    "pitch_type": int(jido_card.pitch_accent_type),
-                    "pitch_svg": jido_card.pitch_accent,
-                    "audio_expr": jido_card.audio[7:-1],
-                    "meaning": jido_card.expr_meaning,
-                    "notes": jido_card.notes,
-                    "sentence_jp": jido_card.sentence_japanese,
-                    "sentence_en": jido_card.sentence_english,
-                    "audio_sentence": jido_card.audio_sentence[7:-1],
-                    "user_level": (
-                        jido_session.study_category + " "
-                        + jido_session.study_level)
-                }
+    # Retrieve sentence data.
+    fetch_sentences(jido_session, jido_card)
 
-                response = requests.post(
-                    "http://127.0.0.1:8000/data", json=card)
+    # Retrieve audio data.
+    fetch_audio(jido_session, jido_card)
 
-                if response.status_code == 200:
-                    print("Card successfully added to database.")
-                elif response.status_code == 422:
-                    print("Database validation error. Card not uploaded.")
-                else:
-                    print(
-                        f"Database error {response.status_code}. "
-                        "Card not uploaded.")
-            except requests.exceptions.ConnectionError:
-                print("Database offline. Card not uploaded.")
-            except Exception as e:
-                print(f"Database error. Card not uploaded. {e}.")
+    # Add card to database.
+    if (
+            jido_card.status_jisho[0] == "success"
+            and jido_card.status_sentence[0] == "success"
+            and jido_card.status_audio_expr[0] == "success"
+            and jido_card.status_audio_sentence[0] == "success"):
+
+        try:
+            card = {
+                "user_input": jido_card.user_input,
+                "expr": jido_card.expr,
+                "reading": jido_card.expr_reading,
+                "reading_furigana": jido_card.expr_reading_furigana,
+                "pitch_type": int(jido_card.pitch_accent_type),
+                "pitch_svg": jido_card.pitch_accent,
+                "audio_expr": jido_card.audio[7:-1],
+                "meaning": jido_card.expr_meaning,
+                "notes": jido_card.notes,
+                "sentence_jp": jido_card.sentence_japanese,
+                "sentence_en": jido_card.sentence_english,
+                "audio_sentence": jido_card.audio_sentence[7:-1],
+                "user_level": (
+                    jido_session.study_category + " "
+                    + jido_session.study_level)
+            }
+
+            response = requests.post(
+                "http://127.0.0.1:8000/data", json=card)
+
+            if response.status_code == 200:
+                print("Card successfully added to database.")
+            elif response.status_code == 422:
+                print("Database validation error. Card not uploaded.")
+            else:
+                print(
+                    f"Database error {response.status_code}. "
+                    "Card not uploaded.")
+        except requests.exceptions.ConnectionError:
+            print("Database offline. Card not uploaded.")
+        except Exception as e:
+            print(f"Database error. Card not uploaded. {e}.")
             
     
     # Create note.
