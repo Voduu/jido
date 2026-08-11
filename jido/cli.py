@@ -123,7 +123,7 @@ def resolve_word(user_input, jido_session):
             jido_card = fetch_word(adjusted_user_input)
         # No match.
         else:
-            print(f"No match found for {user_input}.\n")
+            print(f"No match found for {user_input}.")
 
             failed_card = Card(user_input, "", "", "", "")
             failed_card.status_jisho = ("failed", "no match found")
