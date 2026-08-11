@@ -353,6 +353,8 @@ def main():
             "package, 'csv' to import a csv file): ")
 
         if user_input == "exit":
+            print("Exiting...")
+            jido_session.executor.shutdown(wait=True)
             break
 
         if user_input == "export":
