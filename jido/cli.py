@@ -142,7 +142,8 @@ def resolve_word(user_input, jido_session):
                 jido_session.study_category 
                 + " " + str(jido_session.study_level))}
 
-        response = requests.get("http://127.0.0.1:8000/data", params=card)
+        response = requests.get(
+            jido_session.database_url + "/data", params=card)
         data = response.json()
 
         # If it does exist, pull data from database.
@@ -219,7 +220,7 @@ def generate_card(jido_session, jido_card):
             }
 
             response = requests.post(
-                "http://127.0.0.1:8000/data", json=card)
+                jido_session.database_url + "/data", json=card)
 
             # if response.status_code == 200:
             #     print("Card successfully added to database.")

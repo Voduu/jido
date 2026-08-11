@@ -44,6 +44,9 @@ class JidoSession:
         self.speech_synthesizer = speechsdk.SpeechSynthesizer(
             speech_config=self.speech_config, audio_config=None)
 
+        # Load database endpoint.
+        self.database_url = os.getenv("DATABASE_URL")
+
         self.media_files = []
 
         self.anki_model = genanki.Model(
