@@ -44,4 +44,4 @@ def create_note(jido_session, jido_card):
     )
 
     jido_session.add_note(anki_note)
-    print()
+    # print()

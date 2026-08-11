@@ -1,6 +1,6 @@
+from concurrent.futures import ThreadPoolExecutor
 import hashlib
 import os
-import random
 
 import anthropic
 import azure.cognitiveservices.speech as speechsdk
@@ -10,6 +10,9 @@ import genanki
 
 class JidoSession:
     def __init__(self, deck_name, study_category, study_level):
+        self.executor = ThreadPoolExecutor(max_workers=5)
+        self.pending_futures = []
+
         self.cards_log = []
         self.cards_partial_failure = []
         self.cards_failed = []
@@ -40,6 +43,9 @@ class JidoSession:
             speechsdk.SpeechSynthesisOutputFormat.Audio24Khz160KBitRateMonoMp3)
         self.speech_synthesizer = speechsdk.SpeechSynthesizer(
             speech_config=self.speech_config, audio_config=None)
+
+        # Load database endpoint.
+        self.database_url = os.getenv("DATABASE_URL")
 
         self.media_files = []
 
