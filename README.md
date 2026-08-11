@@ -26,6 +26,7 @@ Furthermore, two separate cards are created for each word: one in which the user
 
 * Study level selection (currently JLPT, Genki, Quartet) for sentence generation difficulty
 * Batch CSV import with session checkpoints
+* Concurrent card generation via a thread pool, allowing multiple words to process simultaneously in the background while resolving the next word
 * Automatic する and な suffix stripping for verb and adjective input
 * Kana input normalization: words usually written in kana (i.e., ありがとう) but that have rarely-used kanji forms (i.e., 有り難う) are correctly resolved
 * SQLite database caching via a FastAPI backend: cards are stored after generation and retrieved on subsequent lookups, avoiding redundant API calls
@@ -34,10 +35,6 @@ Furthermore, two separate cards are created for each word: one in which the user
 ## Future plans
 
 This project is entirely usable in its current state but there are future improvements planned, including but not limited to the following:
-
-### Concurrency
-
-The next update will incorporate concurrency where possible to allow either multiple parts of a card to be generated simultaneously or potentially multiple cards in order to decrease the amount of time required even further.
 
 ### Subtitle and text import via NLP
 
