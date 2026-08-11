@@ -91,6 +91,9 @@ def fetch_word(user_input):
                         continue
                     slug_readings.append(
                         data[s_matches[i]]["japanese"][j]["reading"])
+                elif data[s_matches[i]]["japanese"][j]["reading"] == user_input:
+                    slug_readings.append(
+                        data[s_matches[i]]["japanese"][j]["reading"])
 
             # Create string of readings.
             readings.append("\uff0f".join(slug_readings))
