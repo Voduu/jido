@@ -81,19 +81,20 @@ def fetch_word(user_input):
 
             slug_readings = []
             for j in range(len(data[s_matches[i]]["japanese"])):
-                if "word" not in data[s_matches[i]]["japanese"][j]:
-                    if data[s_matches[i]]["japanese"][j]["reading"] == user_input:
-                        slug_readings.append(
-                            data[s_matches[i]]["japanese"][j]["reading"])
+                entry = data[s_matches[i]]["japanese"][j]
+                word = entry.get("word")
+                reading = entry.get("reading")
+
+                if word is None:
+                    if reading == user_input:
+                        slug_readings.append(reading)
                     continue
-                if data[s_matches[i]]["japanese"][j]["word"] == user_input:
-                    if "reading" not in data[s_matches[i]]["japanese"][j]:
+                if word == user_input:
+                    if reading is None:
                         continue
-                    slug_readings.append(
-                        data[s_matches[i]]["japanese"][j]["reading"])
-                elif data[s_matches[i]]["japanese"][j]["reading"] == user_input:
-                    slug_readings.append(
-                        data[s_matches[i]]["japanese"][j]["reading"])
+                    slug_readings.append(reading)
+                elif reading == user_input:
+                    slug_readings.append(reading)
 
             # Create string of readings.
             readings.append("\uff0f".join(slug_readings))
