@@ -17,7 +17,7 @@ This program is designed to automate the creation of Japanese Anki flashcards wi
 Furthermore, two separate cards are created for each word: one in which the user is tested by the expression, and one where they are tested by the audio of both the expression and the Japanese sentence.
 
 <p align="center">
-    <img src="assets/sample_card.png" alt="An example of a Jido Card" width="350">
+    <img src="assets/sample_card.png" alt="An example of a Jido Card" width="600">
 </p>
 
 ## Requirements
