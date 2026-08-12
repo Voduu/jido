@@ -21,6 +21,7 @@ Furthermore, two separate cards are created for each word: one in which the user
 * Python 3.12+
 * Anthropic API key
 * Microsoft Azure Cognitive Services API key and endpoint
+* A running instance of Jido's FastAPI backend
 
 ## Features
 
