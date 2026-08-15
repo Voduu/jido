@@ -121,8 +121,9 @@ def resolve_word(user_input, jido_session):
         elif user_input[-2:] == "する":
             adjusted_user_input = user_input[:-2]
             jido_card = fetch_word(adjusted_user_input)
-        # No match.
-        else:
+
+        # No match, even after adjusting for な　or する.
+        if jido_card is None:
             print(f"No match found for {user_input}.")
 
             failed_card = Card(user_input, "", "", "", "")
