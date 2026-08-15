@@ -57,7 +57,7 @@ def fetch_sentences(jido_session, jido_card):
                     jido_card.status_sentence = ("failed", "formatting")
                     if jido_card not in jido_session.cards_partial_failure:
                         jido_session.cards_partial_failure.append(jido_card)
-        except (json.JSONDecodeError, KeyError):
+        except (json.JSONDecodeError, KeyError, Exception):
             if i == 0:
                 pass
                 # print(
