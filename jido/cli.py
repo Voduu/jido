@@ -292,7 +292,7 @@ def main():
             else:
                 valid_study_level = True
         elif study_category.lower() == "quartet":
-            study_category = "Genki"
+            study_category = "Quartet"
             study_level = input(
                 "Please enter your chapter (1-12): ")
             try:
