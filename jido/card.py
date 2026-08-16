@@ -14,6 +14,7 @@ class Card:
         self.sentence_english = ""
         self.pitch_accent = ""
         self.pitch_accent_type = "0"
+        self.pitch_manual = False
         self.audio = ""
         self.audio_sentence = ""
         self.notes = expr_notes
