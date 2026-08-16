@@ -125,6 +125,7 @@ hr {
 
 /* === Accent color mapping by Pitch Type (1–4) === */
 /* Apply these classes directly to the .expression (and only where you want color). */
+.accent-0 { color: #b19cd9; }  /* None */
 .accent-1 { color: #8dd36f; }  /* Heiban */
 .accent-2 { color: #ff6961; }  /* Atamadaka */
 .accent-3 { color: #6fa8dc; }  /* Nakadaka */

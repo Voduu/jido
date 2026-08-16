@@ -65,10 +65,9 @@ def import_csv(jido_session):
             user_input = "invalid"
             while user_input.lower() not in ["y", "n", ""]:
                 user_input = input(
-                    f"{count} words have been processed. Would you like to "
+                    f"\n{count} words have been processed. Would you like to "
                     "continue? [Y/n] ")
 
-            print()
             if user_input.lower() == "n":
                 break
         
@@ -154,6 +153,7 @@ def resolve_word(user_input, jido_session):
             jido_card.status_furigana = ("success", "")
             jido_card.pitch_accent_type = str(data["pitch_type"])
             jido_card.pitch_accent = data["pitch_svg"]
+            jido_card.pitch_manual = bool(data["pitch_manual"])
             jido_card.status_pitch_accent = ("success", "")
             jido_card.sentence_japanese = data["sentence_jp"]
             jido_card.sentence_english = data["sentence_en"]
@@ -168,13 +168,79 @@ def resolve_word(user_input, jido_session):
                 "./output/audio/" + data["audio_sentence"])
             fetched_from_database = True
             print("Successfully loaded data from the database.")
-
-            return (jido_card, "fetched from database")
     except requests.exceptions.ConnectionError:
         print("Database offline. Querying...")
     except Exception as e:
         print(f"Database error: {e}.")
         print("Data not found in the database, querying...")
+
+    # If data loadeded from database...
+    if fetched_from_database:
+        # If pitch data is missing, prompt the user.
+        if jido_card.pitch_accent_type == "0":
+            fetch_pitch_accent(jido_session, jido_card)
+                
+            # If user provided new pitch accent, update sentences.
+            if jido_card.pitch_accent_type != "0":
+                match jido_card.pitch_accent_type:
+                    case "1":
+                        jido_card.sentence_japanese = (
+                            jido_card.sentence_japanese.replace(
+                                "rgb(177, 156, 217)", "rgb(141, 211, 111)"))
+                        jido_card.sentence_english = (
+                            jido_card.sentence_english.replace(
+                                "rgb(177, 156, 217)", "rgb(141, 211, 111)"))
+                    case "2":
+                        jido_card.sentence_japanese = (
+                            jido_card.sentence_japanese.replace(
+                                "rgb(177, 156, 217)", "rgb(255, 105, 97)"))
+                        jido_card.sentence_english = (
+                            jido_card.sentence_english.replace(
+                                "rgb(177, 156, 217)", "rgb(255, 105, 97)"))
+                    case "3":
+                        jido_card.sentence_japanese = (
+                            jido_card.sentence_japanese.replace(
+                                "rgb(177, 156, 217)", "rgb(111, 168, 220)"))
+                        jido_card.sentence_english = (
+                            jido_card.sentence_english.replace(
+                                "rgb(177, 156, 217)", "rgb(111, 168, 220)"))
+                    case "4":
+                        jido_card.sentence_japanese = (
+                            jido_card.sentence_japanese.replace(
+                                "rgb(177, 156, 217)", "rgb(255, 179, 71)"))
+                        jido_card.sentence_english = (
+                            jido_card.sentence_english.replace(
+                                "rgb(177, 156, 217)", "rgb(255, 179, 71)"))
+
+                # Update database.
+                try:
+                    card = {
+                        "user_input": jido_card.user_input,
+                        "expr": jido_card.expr,
+                        "reading": jido_card.expr_reading,
+                        "reading_furigana": jido_card.expr_reading_furigana,
+                        "pitch_type": int(jido_card.pitch_accent_type),
+                        "pitch_svg": jido_card.pitch_accent,
+                        "pitch_manual": int(jido_card.pitch_manual),
+                        "audio_expr": jido_card.audio[7:-1],
+                        "meaning": jido_card.expr_meaning,
+                        "notes": jido_card.notes,
+                        "sentence_jp": jido_card.sentence_japanese,
+                        "sentence_en": jido_card.sentence_english,
+                        "audio_sentence": jido_card.audio_sentence[7:-1],
+                        "user_level": (
+                            jido_session.study_category + " "
+                            + jido_session.study_level)
+                    }
+
+                    response = requests.patch(
+                        jido_session.database_url + "/data", json=card)
+                except requests.exceptions.ConnectionError:
+                    print("Database offline. Card not uploaded.")
+                except Exception as e:
+                    print(f"Database error. Card not uploaded. {e}.")
+
+        return (jido_card, "fetched from database")
 
     # If data not loaded from database, enter the pipeline.
     if not fetched_from_database:
@@ -209,6 +275,7 @@ def generate_card(jido_session, jido_card):
                 "reading_furigana": jido_card.expr_reading_furigana,
                 "pitch_type": int(jido_card.pitch_accent_type),
                 "pitch_svg": jido_card.pitch_accent,
+                "pitch_manual": int(jido_card.pitch_manual),
                 "audio_expr": jido_card.audio[7:-1],
                 "meaning": jido_card.expr_meaning,
                 "notes": jido_card.notes,
@@ -350,7 +417,7 @@ def main():
 
     while True:
         user_input = input(
-            "Enter a word ('exit' to exit, 'export' to create .apkg "
+            "\nEnter a word ('exit' to exit, 'export' to create .apkg "
             "package, 'csv' to import a csv file): ")
 
         if user_input == "exit":
@@ -365,8 +432,7 @@ def main():
         if user_input == "csv":
             import_csv(jido_session)
             continue
-
-        print()
+        
         process_word(user_input, jido_session)
 
 

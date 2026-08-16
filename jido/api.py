@@ -13,6 +13,7 @@ class CardModel(BaseModel):
     reading_furigana: str
     pitch_type: int
     pitch_svg: str
+    pitch_manual: bool
     audio_expr: str
     meaning: str
     notes: str | None
@@ -39,7 +40,7 @@ def get_data(
 
         cursor.execute("""
             SELECT expressions.expr_id, user_input, expr, reading, reading_furigana,
-                pitch_type, pitch_svg, audio_expr,
+                pitch_type, pitch_svg, pitch_manual, audio_expr,
                 meanings.meaning_id, meaning, notes,
                 sentence_id, user_level, sentence_jp, sentence_en,
                 audio_sentence, created_date
@@ -47,9 +48,9 @@ def get_data(
             JOIN meanings ON meanings.expr_id = expressions.expr_id
             JOIN sentences ON sentences.meaning_id = meanings.meaning_id
             WHERE expressions.user_input = ?
-            AND expressions.reading = ?
-            AND meanings.meaning = ?
-            AND sentences.user_level = ?""",
+                AND expressions.reading = ?
+                AND meanings.meaning = ?
+                AND sentences.user_level = ?""",
             (user_input, reading, meaning, user_level))
 
         data = cursor.fetchone()
@@ -107,4 +108,44 @@ def add_data(card: CardModel, db = Depends(get_db)):
     finally:
         if cursor:
             cursor.close()
-    
+
+@app.patch("/data")
+def update_data(card: CardModel, db = Depends(get_db)):
+    cursor = None
+
+    try:
+        cursor = db.cursor()
+
+        cursor.execute("""
+            UPDATE expressions SET
+                pitch_type = ?,
+                pitch_svg = ?,
+                pitch_manual = ?
+            WHERE user_input = ?
+                AND reading = ?""",
+            (card.pitch_type, card.pitch_svg,
+             int(card.pitch_manual), card.user_input, card.reading))
+
+        cursor.execute("""
+            UPDATE sentences SET
+                sentence_jp = ?,
+                sentence_en = ?
+            WHERE user_level = ?
+                AND meaning_id = (
+                    SELECT meaning_id FROM meanings
+                    WHERE meaning = ?
+                        AND expr_id = (
+                            SELECT expr_id FROM expressions
+                            WHERE user_input = ?
+                                AND reading = ?))""",
+            (card.sentence_jp, card.sentence_en, card.user_level,
+            card.meaning, card.user_input, card.reading))
+
+        db.commit()
+    except sqlite3.Error as error:
+        print("Jido database error: ", error)
+    except TypeError as error:
+        print("Jido database not found.")
+    finally:
+        if cursor:
+            cursor.close()

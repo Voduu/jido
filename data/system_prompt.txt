@@ -33,6 +33,7 @@ Strict JSON only, nothing else:
 Each card is color coded based on the type of pitch accent it has. The following formatting should surround the target word (or set of words) in both the Japanese and English sentence, depending on the provided pitch formatting number:
 - Even if the word is conjugated differently, it should still be surrounded by these tags to make the word colored.
 - Even if the expression when translated into English is multiple words, they should still be entirely wrapped in the following format.
+- If the Pitch Formatting Number is 0, surround the target word with <span style="color: rgb(177, 156, 217);"><b>expr</b></span>
 - If the Pitch Formatting Number is 1, surround the target word with <span style="color: rgb(141, 211, 111);"><b>expr</b></span>
 - If the Pitch Formatting Number is 2, surround the target word with <span style="color: rgb(255, 105, 97);"><b>expr</b></span>
 - If the Pitch Formatting Number is 3, surround the target word with <span style="color: rgb(111, 168, 220);"><b>expr</b></span>
