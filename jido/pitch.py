@@ -8,18 +8,18 @@ def fetch_pitch_accent(jido_session, jido_card):
     mora_length = len(mora_string)
     reading_length = len(reading)
     reading_found = False
-    pitch_number = 0
+    mora_position = 0
 
     # Find the expression in one of the dictionaries.
     if expr in jido_session.accents_by_expression:
         accent_data = jido_session.accents_by_expression[expr]
         for i in range(len(accent_data)):
             if accent_data[i][0] == reading:
-                pitch_number = int(accent_data[i][1].split(",")[0])
+                mora_position = int(accent_data[i][1].split(",")[0])
                 reading_found = True
             # Kana only words
             elif accent_data[i][0] == "":
-                pitch_number = int(accent_data[i][1].split(",")[0])
+                mora_position = int(accent_data[i][1].split(",")[0])
                 reading_found = True
 
     if not reading_found:
@@ -42,8 +42,8 @@ def fetch_pitch_accent(jido_session, jido_card):
                     skip_pitch = True
                     break
 
-                pitch_number = int(user_input)
-                if 0 <= pitch_number <= mora_length:
+                mora_position = int(user_input)
+                if 0 <= mora_position <= mora_length:
                     valid_input = True
             except ValueError:
                 pass
@@ -63,7 +63,7 @@ def fetch_pitch_accent(jido_session, jido_card):
         jido_card.status_pitch_accent = ("success", "")
 
     # Heiban
-    if pitch_number == 0:
+    if mora_position == 0:
         jido_card.pitch_accent_type = "1"
         for i in range(mora_length + 1):
             if i == 0:
@@ -71,7 +71,7 @@ def fetch_pitch_accent(jido_session, jido_card):
             elif i > 0:
                 pitch_string += "H"
     # Atamadaka
-    elif pitch_number == 1:
+    elif mora_position == 1:
         jido_card.pitch_accent_type = "2"
         for i in range(mora_length + 1):
             if i == 0:
@@ -79,24 +79,24 @@ def fetch_pitch_accent(jido_session, jido_card):
             elif i > 0:
                 pitch_string += "L"
     # Nakadaka
-    elif 1 < pitch_number < mora_length:
+    elif 1 < mora_position < mora_length:
         jido_card.pitch_accent_type = "3"
         for i in range(mora_length + 1):
             if i == 0:
                 pitch_string = "L"
-            elif 0 < i <= pitch_number - 1:
+            elif 0 < i <= mora_position - 1:
                 pitch_string += "H"
-            elif i > pitch_number - 1:
+            elif i > mora_position - 1:
                 pitch_string += "L"
     # Odakagata
-    elif pitch_number == mora_length:
+    elif mora_position == mora_length:
         jido_card.pitch_accent_type = "4"
         for i in range(mora_length + 1):
             if i == 0:
                 pitch_string = "L"
-            elif 0 < i <= pitch_number - 1:
+            elif 0 < i <= mora_position - 1:
                 pitch_string += "H"
-            elif i > pitch_number - 1:
+            elif i > mora_position - 1:
                 pitch_string += "L"
     
     # Develop the SVG based on the pitch_string.
