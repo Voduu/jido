@@ -65,10 +65,9 @@ def import_csv(jido_session):
             user_input = "invalid"
             while user_input.lower() not in ["y", "n", ""]:
                 user_input = input(
-                    f"{count} words have been processed. Would you like to "
+                    f"\n{count} words have been processed. Would you like to "
                     "continue? [Y/n] ")
 
-            print()
             if user_input.lower() == "n":
                 break
         
@@ -418,7 +417,7 @@ def main():
 
     while True:
         user_input = input(
-            "Enter a word ('exit' to exit, 'export' to create .apkg "
+            "\nEnter a word ('exit' to exit, 'export' to create .apkg "
             "package, 'csv' to import a csv file): ")
 
         if user_input == "exit":
@@ -433,8 +432,7 @@ def main():
         if user_input == "csv":
             import_csv(jido_session)
             continue
-
-        print()
+        
         process_word(user_input, jido_session)
 
 
