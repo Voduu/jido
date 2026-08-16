@@ -5,6 +5,10 @@ import genanki
 
 
 def export_deck(output_name, jido_session):
+    # Shutdown the concurrency threads before proceeding.
+    print("Completing any remaining tasks and exporting...")
+    jido_session.executor.shutdown(wait=True)
+
     jido_package = genanki.Package(jido_session.anki_deck)
     jido_package.media_files = jido_session.media_files
     jido_package.write_to_file("./output/packages/" + output_name + ".apkg")
@@ -13,10 +17,6 @@ def export_deck(output_name, jido_session):
 
     # Generate partially failed cards.
     failure_string = ""
-
-    # Shutdown the concurrency threads before proceeding.
-    print("Completing any remaining tasks and exporting...")
-    jido_session.executor.shutdown(wait=True)
     
     for card in jido_session.cards_partial_failure:
         need_comma = False
