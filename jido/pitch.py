@@ -24,6 +24,7 @@ def fetch_pitch_accent(jido_session, jido_card):
 
     if not reading_found:
         valid_input = False
+        skip_pitch = False
         while not valid_input:
             try:
                 print(
@@ -32,16 +33,32 @@ def fetch_pitch_accent(jido_session, jido_card):
                 print(
                     "You can look up the downstep position at online resources"
                     " such as OJAD: https://www.gavo.t.u-tokyo.ac.jp/ojad/")
-                pitch_number = int(input(
+                user_input = input(
                     "Please enter the downstep position for "
-                    f"{jido_card.user_input}: "))
+                    f"{jido_card.user_input} ('skip' to skip): ")
+
+                # Allow the user to skip the pitch altogether.
+                if user_input.lower() in ["skip", "s"]:
+                    skip_pitch = True
+                    break
+
+                pitch_number = int(user_input)
                 if 0 <= pitch_number <= mora_length:
                     valid_input = True
             except ValueError:
                 pass
-        jido_card.status_pitch_accent = ("failed", "manual entry")
+
         if jido_card not in jido_session.cards_partial_failure:
             jido_session.cards_partial_failure.append(jido_card)
+
+        if skip_pitch:
+            jido_card.pitch_accent = ""
+            jido_card.pitch_accent_type = "0"
+            jido_card.status_pitch_accent = ("failed", "skipped")
+            return
+        else:
+            jido_card.pitch_manual = True
+            jido_card.status_pitch_accent = ("failed", "manual entry")
     else:
         jido_card.status_pitch_accent = ("success", "")
 
