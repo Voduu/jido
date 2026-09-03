@@ -1,4 +1,10 @@
 <div class="expression {{#Pitch Type}}accent-{{Pitch Type}}{{/Pitch Type}}">
-  {{furigana:Expression}}
+  <span class="plain">{{kanji:Reading}}</span><span class="furi" style="display:none">{{furigana:Reading}}</span>
 </div>
 
+<button class="reveal-btn" onclick="
+  var d=this.previousElementSibling;
+  d.querySelector('.plain').style.display='none';
+  d.querySelector('.furi').style.display='inline';
+  this.style.display='none';
+">Show reading</button>
