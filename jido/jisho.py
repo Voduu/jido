@@ -235,12 +235,11 @@ def fetch_word(user_input):
 
 def fetch_furigana_data(jido_session, jido_card):
     user_input = jido_card.user_input
-    expression = jido_card.expr
     reading = jido_card.expr_reading
     furigana_found = False
     expression_match = False
-    if expression in jido_session.furigana_dataset:
-        furigana_entries = jido_session.furigana_dataset[expression]
+    if user_input in jido_session.furigana_dataset:
+        furigana_entries = jido_session.furigana_dataset[user_input]
         reading_furigana = ""
         expression_match = True
 
