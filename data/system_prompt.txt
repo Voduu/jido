@@ -25,7 +25,7 @@ Strict JSON only, nothing else:
 - The sentence must be one where replacing the target expression with a different word would make it factually wrong, logically incomplete, or nonsensical
 - For adjectives describing appearance or color, place them in a context where that specific quality is relevant to the outcome or situation, not just a neutral description
 - The sentence must contain at most one subordinate or embedded clause structure beyond the main clause. Do not combine more than one of: a relative clause modifying a noun, a nominalization (という, の, こと), an evidential/hedging construction (と言える, そうだ, ようだ), a reason construction (から, ので, のは〜だ), or multiple te-form clause chains, in the same sentence.
-- If satisfying the non-swappable or context requirements below would require adding a second clause structure, simplify the scenario instead — use more specific nouns, not more grammar.
+- If satisfying the non-swappable or context requirements above would require adding a second clause structure, simplify the scenario instead — use more specific nouns, not more grammar.
 
 === LANGUAGE ===
 - Japanese field: kanji and kana only, written naturally — no furigana, no romanization
